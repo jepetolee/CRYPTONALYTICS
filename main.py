@@ -3,7 +3,8 @@ import ccxt as crypto_main
 import pyupbit as upbit
 
 #global variables- keys
-binance
+binance_key = " "
+upbit_key = " "
 
 #import sys
 import sys
@@ -12,9 +13,8 @@ import sys
 binance = crypto_main.binance()
 
 #GUI
-from PyQt5.QtWidgets import QApplication, QMainWindow,QAction,qApp
+from PyQt5.QtWidgets import QApplication, QMainWindow,QAction,qApp,QWidget
 from PyQt5.QtGui import QIcon
-
 
 #UI design
 class CRYPTONALYTICS(QMainWindow):
@@ -36,17 +36,28 @@ class CRYPTONALYTICS(QMainWindow):
       exitAction.triggered.connect(qApp.quit)
 
       #keys
+      upbit_action = QAction('업비트 API 입력',self)
+      upbit_action.setShortcut('Ctrl+U')
+      upbit_action.setStatusTip('check the upbit key')
+      upbit_action.triggered.connect(qApp.quit)
+
+      binance_action = QAction('바이낸스 API 입력', self)
+      binance_action.setShortcut('Ctrl+B')
+      binance_action.setStatusTip('check the binance key')
+      binance_action.triggered.connect(qApp.quit)
 
       #menubar & widget
       menubar = self.menuBar()
-      menubar.setNativeMenuBar(False)
+
 
       #menu-settings
       filemenu = menubar.addMenu('설정')
       filemenu.addAction(exitAction)
 
       #menu- keys
-      key = menubar.addMenu('키값 넣기')
+      key = menubar.addMenu('API 입력')
+      key.addAction(upbit_action)
+      key.addAction(binance_action)
 
       self.show()
 
