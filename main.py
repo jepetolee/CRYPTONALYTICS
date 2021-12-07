@@ -9,9 +9,9 @@ import sys
 binance = crypto_main.binance()
 
 # GUI
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, qApp, QWidget, QInputDialog
-from PyQt5.QtGui import QIcon
-
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import Qt
 
 # UI design
 class CRYPTONALYTICS(QMainWindow):
@@ -50,8 +50,8 @@ class CRYPTONALYTICS(QMainWindow):
     def initUI(self):
         # images,deposit, title
         self.setWindowTitle('CRYPTONALYTICS')
-        self.setWindowIcon(QIcon('bitcoin.png'))
-        self.setGeometry(400, 200, 900, 600)
+        self.setWindowIcon(QIcon('./images/bitcoin.png'))
+        self.resize(1200, 741)
 
         # exiting method
         exitAction = QAction('나가기', self)
@@ -81,6 +81,36 @@ class CRYPTONALYTICS(QMainWindow):
         key = menubar.addMenu('API 입력')
         key.addAction(upbit_action)
         key.addAction(binance_action)
+
+        #menu-chart
+        chart = menubar.addMenu('기술적 분석')
+        #chart.addAction(chart_analysis) # 엘리어트 파동 이론, 겐의 각도론
+
+        #reinforcement trading
+        auto_trading = menubar.addMenu('자동 투자')
+
+
+        #info
+        main_layout = QVBoxLayout()
+
+        main_info = QLabel(self)
+        main_info.setAlignment(Qt.AlignCenter)
+        main_image =QPixmap('./images/main.jpg')
+        main_info.setPixmap(main_image)
+        main_info.resize(main_image.width(),main_image.height())
+
+        main_text = QLabel("오도 기합 짜세 투자기",self)
+        main_text.setAlignment(Qt.AlignCenter)
+        main_font = main_text.font()
+        main_font.setPointSize(30)
+        main_text.setFont(main_font)
+
+        main_layout.addWidget(main_info)
+        main_layout.addWidget(main_text)
+        centralwidget =QWidget()
+        centralwidget.setLayout(main_layout)
+
+        self.setCentralWidget(centralwidget)
 
         self.show()
 
