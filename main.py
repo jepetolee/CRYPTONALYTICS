@@ -84,11 +84,18 @@ class CRYPTONALYTICS(QMainWindow):
 
         #menu-chart
         chart = menubar.addMenu('기술적 분석')
-        #chart.addAction(chart_analysis) # 엘리어트 파동 이론, 겐의 각도론
+        #chart.addAction(chart_analysis) # 엘리어트 파동 이론, 겐의 각도론, 다우이론,로그 차트
 
         #reinforcement trading
         auto_trading = menubar.addMenu('자동 투자')
+        #자동투자 인공지능 스켈핑- 예측 투자후 안되면 빠지기-생존의 스켈핑 즉 주식을 오래 보유 하지 않고 이득을 먹고 탁탁 나오게끔
+        #확증 편향 제거
 
+        auto_portfolio = menubar.addMenu('자동투자 포트 폴리오')
+        # 수익률 로그 그래프
+
+        training = menubar.addMenu('인공지능 성능 업데이트')
+        # 신경망 파일 학습
 
         #info
         main_layout = QVBoxLayout()
