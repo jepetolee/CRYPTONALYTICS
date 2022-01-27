@@ -1,10 +1,8 @@
 # import crypto packages
 import ccxt as crypto_main
-import pyupbit as upbit
 
 # import settings
 import sys
-import time
 
 # import binance from ccxt
 binance = crypto_main.binance()
@@ -16,12 +14,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtChart import *
 
 # series data
-from pandas import *
 
 #call libs
-from analytics import *
-
-
 
 
 # UI design
