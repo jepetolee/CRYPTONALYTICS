@@ -17,6 +17,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\TradeAlgorithm\csv\1day\daily_data_1INCHDOWNUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\1day\daily_data_1INCHUPUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\TradeAlgorithm\csv\1day\daily_data_ADADOWNUSDT.csv">
           <value>
             <Attribute>
