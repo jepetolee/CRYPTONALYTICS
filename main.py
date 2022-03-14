@@ -163,7 +163,7 @@ class CRYPTONALYTICS(QMainWindow):
         main_info.setPixmap(main_image)
         main_info.resize(main_image.width(), main_image.height())
 
-        main_text = QLabel("성공적인투자, 안정적인 손실", self)
+        main_text = QLabel("저손실 고소득의 실체화", self)
         main_text.setAlignment(Qt.AlignCenter)
         main_font = main_text.font()
         main_font.setPointSize(30)
