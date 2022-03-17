@@ -5,7 +5,6 @@ csv 값 수집, 해당 csv 파일에 로그 차트 값 추가
 import pandas as pd
 
 
-
 def future_symbol_daily_data(symbol):
     url = 'D:/CRYPTONALYTICS/TradeAlgorithm/csv/future/1day/daily_data_' + symbol + ".csv"
     try:

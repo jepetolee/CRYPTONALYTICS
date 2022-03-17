@@ -8,7 +8,7 @@ from calcul import cal_varience_percent
 from make_pd import future_symbol_daily_data
 
 
-def MarketOneDayVariancePercent():
+def FutureOneDayVariancePercent():
     array = []
     symbolic = []
     symbol = ['BTCUSDT',
@@ -32,7 +32,7 @@ def MarketOneDayVariancePercent():
     return array, symbolic
 
 
-def MarketOneDaylog():
+def FutureOneDaylog():
     arrays = []
     symbolic = []
     symbol = ['BTCUSDT',
@@ -56,7 +56,7 @@ def MarketOneDaylog():
     return arrays, symbolic
 
 
-def ProphetOneDay():
+def FutureProphetOneDay():
     arrays = []
     symbolic = []
     symbol = ['BTCUSDT',

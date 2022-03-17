@@ -161,7 +161,7 @@ def build_future_package():  # 2022 03 14
         #th3.start()
         #th4.start()
         #th5.start()
-        th6.start()
+        #th6.start()
         th7.start()
 
         #th1.join()
@@ -169,7 +169,7 @@ def build_future_package():  # 2022 03 14
         #th3.join()
         #th4.join()
         #th5.join()
-        th6.join()
+        #th6.join()
         th7.join()
         print("FINISHED BUILDING DATA SETS NEED TO CHECK DATAS")
 
