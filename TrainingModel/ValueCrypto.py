@@ -25,29 +25,23 @@ class InvestmentSelect(nn.Module):
 
 
 class TrendReader(nn.Module):
-    def __init__(self):
+    def __init__(self, insize, outsize):
         super(TrendReader, self).__init__()
-        self.t1hencoder = TransformerEncoder()
-        self.t15mencoder = TransformerEncoder()
-        self.t5mencoder = TransformerEncoder()
-        self.t1mencoder = TransformerEncoder()
+        self.tencoder = TransformerEncoder(insize, 120, 256, 8, 4, 0.1)
 
-        self.v1h = nn.Linear(self.encoder.h1, 2)
-        self.v15m = nn.Linear(self.encoder.h1, 8)
-        self.v5m = nn.Linear(self.encoder.h1, 24)
-        self.v1m = nn.Linear(self.encoder.h1, 120)
+        self.vm = nn.Linear(120, outsize)
 
     def value(self, x):
-        x = func.leaky_relu(self.t1hencoder(x))
+        x = func.leaky_relu(self.tencoder(x))
         return self.v(x)
 
 
 class PositionDecisioner(nn.Module):
-    def __init__(self):
+    def __init__(self, insize, outsize):
         super(PositionDecisioner, self).__init__()
-        self.encoder = TrendReader()
-        self.p = nn.Linear(self.encoder.h1, 3)
-        self.v = nn.Linear(self.encoder.h1, 1)
+        self.encoder = TrendReader(insize, outsize)
+        self.p = nn.Linear(outsize, 3)
+        self.v = nn.Linear(outsize, 1)
 
     def pi(self, x, softmax_dim=1):
         x = func.leaky_relu(self.encoder(x))
