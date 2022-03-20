@@ -1,6 +1,7 @@
 import numpy as np
 from Prophet import *
 
+
 class DatasetBuilder:
 
     def __init__(self, data, input_data=60, output=20, stride=3):
@@ -22,8 +23,8 @@ class DatasetBuilder:
         self.x = X
         self.y = Y
 
-    def __getitem__(self, item):
-        return self.x[item], self.y[item]
+    def pop(self):
+        return self.x, self.y
 
 
 def OneDayDataSetOut():
@@ -31,7 +32,7 @@ def OneDayDataSetOut():
     data = FutureOneDayData()
     mupper, mmiddles = FutureOneDayMacd()
 
-    data_bundle = list()
+    data_bundleX, data_bundleY = list(), list()
     rsi = FutureOneDayRsi()
     upper, middles, lows = FutureOneDayBBands()
     logs, variance = FutureOneDaylog(), FutureOneDayVariancePercent()
@@ -45,11 +46,8 @@ def OneDayDataSetOut():
         dataset = np.vstack([dataset, lows[i][14:]])
         dataset = np.vstack([dataset, variance[i][13:]]).T
 
-        dataset = DatasetBuilder(dataset, 14, 3, 4)
-        data_bundle.append(dataset)
+        datasetX, datasetY = DatasetBuilder(dataset, 14, 3, 4).pop()
+        data_bundleX.append(datasetX)
+        data_bundleY.append(datasetY)
 
-    return data_bundle
-
-
-if __name__ == "__main__":
-    OneDayDataSetOut()
+    return data_bundleX,data_bundleY
