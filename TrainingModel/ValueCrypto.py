@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as func
-from Model import TransformerEncoder
+from Model import Transformer
 
 
 class InvestmentSelect(nn.Module):
     def __init__(self, insize):
         super(InvestmentSelect, self).__init__()
-        self.encoder = TransformerEncoder(insize, 12 * 10 * 3, 256, 8, 4, 0.1)
+        self.encoder = Transformer(insize, 12 * 10 * 3, 256, 8, 4, 0.1)
 
         self.p = nn.Linear(self.encoder.h1, 12)
         self.v = nn.Linear(self.encoder.h1, 1)
@@ -25,14 +25,15 @@ class InvestmentSelect(nn.Module):
 
 
 class TrendReader(nn.Module):
-    def __init__(self, insize, outsize):
+    def __init__(self, insize,size, outsize):
         super(TrendReader, self).__init__()
-        self.tencoder = TransformerEncoder(insize, 120, 256, 8, 4, 0.1)
+        self.tencoder = Transformer(insize, 120,size, 256, 8, 4, 0.1)
 
-        self.vm = nn.Linear(120, outsize)
+        self.v = nn.Linear(120, outsize)
 
-    def value(self, x):
-        x = func.leaky_relu(self.tencoder(x))
+    def value(self, x, device):
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[0]).to(device)
+        x = func.leaky_relu(self.tencoder(x,src_mask))
         return self.v(x)
 
 

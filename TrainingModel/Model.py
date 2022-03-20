@@ -8,13 +8,18 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch.utils.data import dataset
 
 
-class TransformerEncoder(nn.Module):
-    def __init__(self, iw, ow, d_model, nhead, nlayers, dropout=0.5):
-        super(TransformerEncoder
+class Transformer(nn.Module):
+    def __init__(self, iw, ow,size, d_model, nhead, nlayers, dropout=0.5):
+        super(Transformer
               , self).__init__()
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, dropout=dropout)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=nlayers)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
+
+        self.invertor = nn.Sequential(
+            nn.Linear(size, 1),
+            nn.ReLU()
+        )
 
         self.encoder = nn.Sequential(
             nn.Linear(1, d_model // 2),
@@ -40,6 +45,7 @@ class TransformerEncoder(nn.Module):
         return mask
 
     def forward(self, src, srcmask):
+        src= self.invertor(src)
         src = self.encoder(src)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src.transpose(0, 1), srcmask).transpose(0, 1)
