@@ -3,10 +3,10 @@ from pandas import DataFrame
 
 
 class TrainingAgent:
-    def __init__(self, api_key, api_secret, test=False):
-
+    def __init__():
 
         self.leverage = 1
+
         # 현재 잔고 조회
         self.withdrawAvailable = 1
         self.shutdown = False
@@ -27,7 +27,6 @@ class TrainingAgent:
         self.isposition = False
         self.account = 1
         self.current_percent = 1
-        self.check_account()
         self.seed_money = self.account
 
     # 포지션 변경(내부값)
@@ -38,12 +37,10 @@ class TrainingAgent:
         else:
             self.position = 'SELL'
 
-
-
     # 해당 모델의 손해가 지정 %가 넘어버렸을 경우 재빠르게 종료
     def finisher(self, percent=-5):
         if self.percent() <= percent:
-            ty=0
+            ty = 0
         return
 
     def select_symbol(self, symbol):
@@ -68,15 +65,7 @@ class TrainingAgent:
                 self.check_account()
                 self.isposition = True
                 return self.percent()
-            except BinanceAPIException as e:
-                if retry is True:
-                    print("Agent: 주문 에러 형성! 강제종료에 진입합니다." + str(e))
-                    self.shutdown = True
 
-                    return
-                else:
-                    print("Agent: 주문이 안됬어요! 다시 시도해볼게요.")
-                    self.step(position, retry=True)
 
     # 현 계좌 체크
     def check_account(self):
@@ -110,5 +99,3 @@ class TrainingAgent:
     # 마진거래 채결중 현재 수익/손실 측정
     def percent(self):
         return self.leverage * (100 - 100 * (self.current_price / self.position_price))
-
-
