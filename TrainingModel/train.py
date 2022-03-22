@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch
 
 
-def train(device, saved=False):
+def pretrain_day(device, saved=False):
     epoch = 100
     dataX, dataY = OneDayDataSetOut()
     progress = tqdm(range(epoch))
@@ -27,6 +27,7 @@ def train(device, saved=False):
     for i in range(len(dataX)):
 
         model = TrendReader(14, 13, 3).to(device)
+ 
         if saved:
             model.load_state_dict(torch.load('./model/oneday' + symbol[i] + '.pt'))
         criterion = nn.MSELoss()
@@ -53,4 +54,4 @@ def train(device, saved=False):
 
 
 if __name__ == "__main__":
-    train('cpu')
+    pretrain_day('cpu')
