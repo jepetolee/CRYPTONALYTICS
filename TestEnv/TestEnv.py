@@ -1,10 +1,5 @@
-from time import sleep
-from pandas import DataFrame
-
-
 class TrainingAgent:
-    def __init__():
-
+    def __init__(self):
         self.leverage = 1
 
         # 현재 잔고 조회
@@ -48,13 +43,12 @@ class TrainingAgent:
         return self.symbol
 
     # 에이전트 스탭
-    def step(self, position, retry=False):
+    def step(self, position):
 
         if position[1] == 'HOLD':
             return 0
         else:
-            try:
-                self.agent.futures_cancel_all_open_orders(symbol=self.symbol)
+
 
                 self.position = position[1]
                 self.reverse_position()
@@ -62,24 +56,11 @@ class TrainingAgent:
                 self.position_price = position[0]
                 self.quantity = position[2]
                 self.time_steps += 1
-                self.check_account()
                 self.isposition = True
                 return self.percent()
 
 
-    # 현 계좌 체크
-    def check_account(self):
-        try:
-            account = DataFrame.from_dict(account)
 
-            account = account.loc[account['asset'] == 'USDT']
-
-            self.account = float(account['balance'].values)
-            self.withdrawAvailable = float(account['withdrawAvailable'].values)
-        except BinanceAPIException as e:
-            self.shutdown = True
-            print("Agent: 계좌와 연동에 실패했습니다! api를 확인해주세요!" + str(e))
-        return
 
     # 포지션 종료가 형성
     def define_TPSL(self, profit_position, stop_position):
