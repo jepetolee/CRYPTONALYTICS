@@ -32,7 +32,7 @@ class TrendReader(nn.Module):
         self.v = nn.Linear(120, outsize)
 
     def value(self, x, device):
-        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[0]).to(device)
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(device)
         x = func.leaky_relu(self.tencoder(x,src_mask))
         return self.v(x)
 
@@ -53,3 +53,4 @@ class PositionDecisioner(nn.Module):
     def value(self, x):
         x = func.leaky_relu(self.encoder(x))
         x = self.v(x)
+        return x
