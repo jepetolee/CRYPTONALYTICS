@@ -5,21 +5,23 @@ from Model import Transformer
 
 
 class InvestmentSelect(nn.Module):
-    def __init__(self, insize):
+    def __init__(self, insize,size):
         super(InvestmentSelect, self).__init__()
-        self.encoder = Transformer(insize, 12 * 10 * 3, 256, 8, 4, 0.1)
+        self.encoder = Transformer(insize, 12 * 10,size, 256, 8, 4, 0.1)
 
-        self.p = nn.Linear(self.encoder.h1, 12)
-        self.v = nn.Linear(self.encoder.h1, 1)
+        self.p = nn.Linear(120, 12)
+        self.v = nn.Linear(120, 1)
 
-    def pi(self, x, softmax_dim=1):
-        x = func.leaky_relu(self.encoder(x))
+    def pi(self, x, device, softmax_dim=1):
+        src_mask = self.encoder.generate_square_subsequent_mask(x.shape[1]).to(device)
+        x = func.leaky_relu(self.encoder(x,src_mask))
         x = self.p(x)
         prob = func.log_softmax(x, dim=softmax_dim)
         return prob
 
-    def value(self, x):
-        x = func.leaky_relu(self.encoder(x))
+    def value(self, x, device):
+        src_mask = self.encoder.generate_square_subsequent_mask(x.shape[1]).to(device)
+        x = func.leaky_relu(self.encoder(x,src_mask))
         x = self.v(x)
         return x
 
