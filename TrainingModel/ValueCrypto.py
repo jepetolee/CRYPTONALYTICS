@@ -5,37 +5,30 @@ from Model import Transformer
 
 
 class InvestmentSelect(nn.Module):
-    def __init__(self, insize,size):
+    def __init__(self, insize, size):
         super(InvestmentSelect, self).__init__()
-        self.encoder = Transformer(insize, 12 * 10,size, 256, 8, 4, 0.1)
+        self.encoder = Transformer(insize, 12 * 10, size, 256, 8, 4, 0.1)
 
         self.p = nn.Linear(120, 12)
-        self.v = nn.Linear(120, 1)
 
     def pi(self, x, device, softmax_dim=1):
         src_mask = self.encoder.generate_square_subsequent_mask(x.shape[1]).to(device)
-        x = func.leaky_relu(self.encoder(x,src_mask))
+        x = func.leaky_relu(self.encoder(x, src_mask))
         x = self.p(x)
-        prob = func.log_softmax(x, dim=softmax_dim)
+        prob = func.softmax(x, dim=softmax_dim)
         return prob
-
-    def value(self, x, device):
-        src_mask = self.encoder.generate_square_subsequent_mask(x.shape[1]).to(device)
-        x = func.leaky_relu(self.encoder(x,src_mask))
-        x = self.v(x)
-        return x
 
 
 class TrendReader(nn.Module):
-    def __init__(self, insize,size, outsize):
+    def __init__(self, insize, size, outsize):
         super(TrendReader, self).__init__()
-        self.tencoder = Transformer(insize, 120,size, 256, 8, 4, 0.1)
+        self.tencoder = Transformer(insize, 120, size, 256, 8, 4, 0.1)
 
         self.v = nn.Linear(120, outsize)
 
     def value(self, x, device):
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(device)
-        x = func.leaky_relu(self.tencoder(x,src_mask))
+        x = func.leaky_relu(self.tencoder(x, src_mask))
         return self.v(x)
 
 

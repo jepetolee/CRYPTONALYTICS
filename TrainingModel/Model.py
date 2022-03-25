@@ -1,11 +1,7 @@
 import math
-from typing import Tuple
 
 import torch
-from torch import nn, Tensor
-import torch.nn.functional as F
-from torch.nn import TransformerEncoder, TransformerEncoderLayer
-from torch.utils.data import dataset
+from torch import nn
 
 
 class Transformer(nn.Module):
@@ -16,13 +12,8 @@ class Transformer(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=nlayers)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
 
-        self.invertor = nn.Sequential(
-            nn.Linear(size, 1),
-            nn.ReLU()
-        )
-
         self.encoder = nn.Sequential(
-            nn.Linear(1, d_model // 2),
+            nn.Linear(size, d_model // 2),
             nn.ReLU(),
             nn.Linear(d_model // 2, d_model)
         )
@@ -45,8 +36,9 @@ class Transformer(nn.Module):
         return mask
 
     def forward(self, src, srcmask):
-        src= self.invertor(src)
+
         src = self.encoder(src)
+
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src.transpose(0, 1), srcmask).transpose(0, 1)
         output = self.linear(output)[:, :, 0]
