@@ -5,7 +5,7 @@ from torch import nn
 
 
 class Transformer(nn.Module):
-    def __init__(self, iw, ow,size, d_model, nhead, nlayers, dropout=0.5):
+    def __init__(self, iw, ow, size, d_model, nhead, nlayers, dropout=0.5):
         super(Transformer
               , self).__init__()
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, dropout=dropout)
@@ -36,7 +36,6 @@ class Transformer(nn.Module):
         return mask
 
     def forward(self, src, srcmask):
-
         src = self.encoder(src)
 
         src = self.pos_encoder(src)

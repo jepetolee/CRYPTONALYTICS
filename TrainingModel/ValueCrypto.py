@@ -7,16 +7,16 @@ from Model import Transformer
 class InvestmentSelect(nn.Module):
     def __init__(self, insize, size):
         super(InvestmentSelect, self).__init__()
-        self.encoder = Transformer(insize, 12 * 10, size, 256, 8, 4, 0.1)
+        self.insize = insize
+        self.encoder1 = nn.Linear(size, 1)
+        self.encoder2 = nn.Linear(insize, 120)
+        self.q = nn.Linear(120, 12)
 
-        self.p = nn.Linear(120, 12)
-
-    def pi(self, x, device, softmax_dim=1):
-        src_mask = self.encoder.generate_square_subsequent_mask(x.shape[1]).to(device)
-        x = func.leaky_relu(self.encoder(x, src_mask))
-        x = self.p(x)
-        prob = func.softmax(x, dim=softmax_dim)
-        return prob
+    def forward(self, x, softmax_dim=1):
+        x = func.relu(self.encoder1(x))
+        x = func.relu(self.encoder2(x.reshape(-1, self.insize)))
+        x = func.relu(self.q(x))
+        return func.softmax(x, dim=softmax_dim)
 
 
 class TrendReader(nn.Module):
