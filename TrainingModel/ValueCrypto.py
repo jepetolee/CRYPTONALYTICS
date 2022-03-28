@@ -5,16 +5,17 @@ from Model import Transformer
 
 
 class InvestmentSelect(nn.Module):
-    def __init__(self, insize, size):
+    def __init__(self, incode, hidden, size, device):
         super(InvestmentSelect, self).__init__()
-        self.insize = insize
-        self.encoder1 = nn.Linear(size, 1)
-        self.encoder2 = nn.Linear(insize, 120)
-        self.q = nn.Linear(120, 12)
+        self.incode = incode
+        self.device = device
+        self.encoder1 = nn.Linear(size,1)
+        self.trendreader = TrendReader(incode, 12, hidden)
+        self.q = nn.Linear(hidden, 12)
 
     def forward(self, x, softmax_dim=1):
-        x = func.relu(self.encoder1(x))
-        x = func.relu(self.encoder2(x.reshape(-1, self.insize)))
+        x = self.encoder1(x)
+        x = self.trendreader.value(x.reshape(-1,self.incode,12), device=self.device)
         x = func.relu(self.q(x))
         return func.softmax(x, dim=softmax_dim)
 
