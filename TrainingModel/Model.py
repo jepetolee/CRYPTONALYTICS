@@ -38,7 +38,6 @@ class Transformer(nn.Module):
 
     def forward(self, src, srcmask):
         src = self.encoder(src)
-
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src.transpose(0, 1), srcmask).transpose(0, 1)
         output = self.linear(output)[:, :, 0]

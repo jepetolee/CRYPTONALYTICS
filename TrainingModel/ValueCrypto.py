@@ -1,3 +1,5 @@
+import gc
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as func
@@ -9,13 +11,17 @@ class InvestmentSelect(nn.Module):
         super(InvestmentSelect, self).__init__()
         self.incode = incode
         self.device = device
-        self.encoder1 = nn.Linear(size,1)
-        self.trendreader = TrendReader(incode, 12, hidden)
-        self.q = nn.Linear(hidden, 12)
+        self.encoder1 = nn.Linear(size, 1)
+        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
+        self.q = nn.Linear(120, 12)
 
     def forward(self, x, softmax_dim=1):
-        x = self.encoder1(x)
-        x = self.trendreader.value(x.reshape(-1,self.incode,12), device=self.device)
+        x = self.encoder1(x)[:, :, :, 0]
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
+        x = func.relu(self.tencoder(x, src_mask))
+        del src_mask
+        gc.collect()
+        torch.cuda.empty_cache()
         x = func.relu(self.q(x))
         return func.softmax(x, dim=softmax_dim)
 
