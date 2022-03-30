@@ -22,7 +22,7 @@ class InvestmentSelect(nn.Module):
         del src_mask
         gc.collect()
         torch.cuda.empty_cache()
-        x = func.relu(self.q(x))
+        x = self.q(x)
         return func.softmax(x, dim=softmax_dim)
 
 
