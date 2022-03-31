@@ -19,7 +19,7 @@ def pretrain_hour(device, saved=False, grad_lock=False, batchsize=16, builded=Fa
     if saved:
         model_inv.load_state_dict(torch.load('./model/oneday_investment.pt'))
 
-    optimizer = torch.optim.Adam(model_inv.parameters(), lr=3e-6)
+    optimizer = torch.optim.Adam(model_inv.parameters(), lr=4e-6)
 
     for _i in range(epoch):
         batch_loss = 0.0
