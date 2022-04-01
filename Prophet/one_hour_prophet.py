@@ -91,18 +91,22 @@ def FutureProphetOneHour():
               'AVAXUSDT',
               'LTCUSDT',
               'NEARUSDT']
+
+    f = open('D:/CRYPTONALYTICS/TrainingModel/predict/onehour/predict.txt',"w")
+
     for _i in range(len(symbol)):
         data = future_symbol_1hour_data(symbol[_i])
         if data is not None:
-            prophet = NeuralProphet(seasonality_mode='multiplicative', n_forecasts=14 * 24, epochs=300,
-                                    n_changepoints=200)
-            data = DataFrame({'ds': data.index, 'y': data['4'].copy()})
-
-            prophet.fit(data, validation_df=data, freq="D")
-            future = prophet.make_future_dataframe(data, periods=14 * 24)
+            prophet = NeuralProphet(seasonality_mode='multiplicative', n_forecasts=12, epochs=30)
+            datas = DataFrame({'ds': data.index, 'y': data['4'].copy()})
+            prophet.fit(datas, validation_df=datas, freq="H")
+            future = prophet.make_future_dataframe(datas, periods=14 * 24)
             df = prophet._prepare_dataframe_to_predict(future)
             dates, predicted, components = prophet._predict_raw(df, include_components=True)
-            arrays.append(predicted[-14 * 24])
+            arrays.append((predicted[-12]))
+
+            f.writelines(str(predicted[-12]))
+    f.close()
     return arrays
 
 
@@ -200,3 +204,5 @@ def FutureOneHourDerivative():
             array.append(np.gradient(data['4'].to_numpy()))
 
     return array
+
+

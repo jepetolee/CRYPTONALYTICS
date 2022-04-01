@@ -53,4 +53,4 @@ def pretrain_hour(device, saved=False, grad_lock=False, batchsize=16, builded=Fa
 
 
 if __name__ == '__main__':
-    pretrain_hour('cpu', batchsize=16, saved=True, builded=False,passer=200,isolation=20)
+    pretrain_hour('cpu', batchsize=2, saved=True, builded=True,passer=200)
