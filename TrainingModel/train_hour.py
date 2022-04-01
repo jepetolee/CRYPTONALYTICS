@@ -1,5 +1,3 @@
-import sys
-sys.path.append('..')
 from ValueCrypto import TrendReader, InvestmentSelect
 from TradeAlgorithm import CurrentDataOut, BuildBatchTrainDataset
 from tqdm import tqdm, trange
@@ -10,7 +8,7 @@ import gc
 from torch.distributions import Categorical
 
 
-def pretrain_hour(device, saved=False, grad_lock=False, batchsize=16, builded=False, passer=0,isolation=5):
+def pretrain_hour(device, saved=False, grad_lock=False, batchsize=16, builded=False, passer=0, isolation=5):
     epoch, smallest_loss = 1000, 5e+11
 
     size = BuildBatchTrainDataset(batchsize, builded)
@@ -50,7 +48,3 @@ def pretrain_hour(device, saved=False, grad_lock=False, batchsize=16, builded=Fa
             if smallest_loss > batch_loss:
                 smallest_loss = batch_loss
                 torch.save(model_inv.state_dict(), './model/oneday_investment.pt')
-
-
-if __name__ == '__main__':
-    pretrain_hour('cpu', batchsize=2, saved=True, builded=True,passer=200)

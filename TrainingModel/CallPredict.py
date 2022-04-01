@@ -10,4 +10,3 @@ def call_1hour_prophets():
 def call_15min_prophets():
     update_future_15min_csv()
     FutureProphetFifteenMinute()
-

@@ -26,6 +26,96 @@ class InvestmentSelect(nn.Module):
         return func.softmax(x, dim=softmax_dim)
 
 
+class PositionDecisioner(nn.Module):
+    def __init__(self, incode, size, device):
+        super(PositionDecisioner, self).__init__()
+        self.incode = incode
+        self.device = device
+        self.encoder1 = nn.Linear(size, 1)
+        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
+        self.q = nn.Linear(120, 3)
+        self.v = nn.Linear(120, 1)
+
+    def setposition(self, x, softmax_dim=1):
+        x = self.encoder1(x)[:, :, :, 0]
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
+        x = func.relu(self.tencoder(x, src_mask))
+        del src_mask
+        gc.collect()
+        torch.cuda.empty_cache()
+        x = self.q(x)
+        return func.softmax(x, dim=softmax_dim)
+
+    def value(self, x):
+        x = self.encoder1(x)[:, :, :, 0]
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
+        x = func.relu(self.tencoder(x, src_mask))
+        del src_mask
+        gc.collect()
+        torch.cuda.empty_cache()
+        return func.elu(self.v(x))
+
+
+class Determiner(nn.Module):
+    def __init__(self, incode, size, device):
+        super(Determiner, self).__init__()
+        self.incode = incode
+        self.device = device
+        self.encoder1 = nn.Linear(size, 1)
+        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
+        self.determiner = nn.Linear(120, 2)
+        self.v = nn.Linear(120, 1)
+
+    def determine(self, x, softmax_dim=1):
+        x = self.encoder1(x)[:, :, :, 0]
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
+        x = func.relu(self.tencoder(x, src_mask))
+        del src_mask
+        gc.collect()
+        torch.cuda.empty_cache()
+        x = self.determiner(x)
+        return func.softmax(x, dim=softmax_dim)
+
+    def value(self, x):
+        x = self.encoder1(x)[:, :, :, 0]
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
+        x = func.relu(self.tencoder(x, src_mask))
+        del src_mask
+        gc.collect()
+        torch.cuda.empty_cache()
+        return func.elu(self.v(x))
+
+
+class Leverage(nn.Module):
+    def __init__(self, incode, size, device):
+        super(Leverage, self).__init__()
+        self.incode = incode
+        self.device = device
+        self.encoder1 = nn.Linear(size, 1)
+        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
+        self.determine = nn.Linear(120, 2)
+        self.v = nn.Linear(120, 1)
+
+    def setleverage(self, x, softmax_dim=1):
+        x = self.encoder1(x)[:, :, :, 0]
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
+        x = func.relu(self.tencoder(x, src_mask))
+        del src_mask
+        gc.collect()
+        torch.cuda.empty_cache()
+        x = self.determine(x)
+        return func.softmax(x, dim=softmax_dim)
+
+    def value(self, x):
+        x = self.encoder1(x)[:, :, :, 0]
+        src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
+        x = func.relu(self.tencoder(x, src_mask))
+        del src_mask
+        gc.collect()
+        torch.cuda.empty_cache()
+        return func.elu(self.v(x))
+
+
 class TrendReader(nn.Module):
     def __init__(self, insize, size, outsize):
         super(TrendReader, self).__init__()
@@ -37,22 +127,3 @@ class TrendReader(nn.Module):
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(device)
         x = func.leaky_relu(self.tencoder(x, src_mask))
         return self.v(x)
-
-
-class PositionDecisioner(nn.Module):
-    def __init__(self, insize, outsize):
-        super(PositionDecisioner, self).__init__()
-        self.encoder = TrendReader(insize, outsize)
-        self.p = nn.Linear(outsize, 3)
-        self.v = nn.Linear(outsize, 1)
-
-    def pi(self, x, softmax_dim=1):
-        x = func.leaky_relu(self.encoder(x))
-        x = self.p(x)
-        prob = func.log_softmax(x, dim=softmax_dim)
-        return prob
-
-    def value(self, x):
-        x = func.leaky_relu(self.encoder(x))
-        x = self.v(x)
-        return x

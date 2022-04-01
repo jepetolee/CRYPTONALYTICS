@@ -106,7 +106,7 @@ def build_future_1min_csv():
         day.to_csv('./csv/future/1min/1min_data_' + symbol[i] + '.csv')
 
 
-def build_future_package():  # 2022 03 14
+def build_future_package():
     if __name__ == "__main__":
         th1 = Process(target=build_future_1day_csv)
         th2 = Process(target=build_future_4hour_csv)

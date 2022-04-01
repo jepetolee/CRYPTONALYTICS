@@ -105,7 +105,7 @@ def FutureProphetOneHour():
             dates, predicted, components = prophet._predict_raw(df, include_components=True)
             arrays.append((predicted[-12]))
 
-            f.writelines(str(predicted[-12]))
+            f.writelines(str(predicted[-12])+'\n')
     f.close()
     return arrays
 

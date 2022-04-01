@@ -1,7 +1,4 @@
-import sys
-
-sys.path.append('..')
-from ValueCrypto import TrendReader, InvestmentSelect
+from ValueCrypto import Trader
 from TradeAlgorithm import CurrentDataOut, BuildBatchTrainDataset
 from tqdm import tqdm, trange
 import torch.nn as nn
