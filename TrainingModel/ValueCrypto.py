@@ -12,8 +12,8 @@ class InvestmentSelect(nn.Module):
         self.incode = incode
         self.device = device
         self.encoder1 = nn.Linear(size, 1)
-        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
-        self.q = nn.Linear(120, 12)
+        self.tencoder = Transformer(incode, 60, 12, 256, 8, 4, 0.1)
+        self.q = nn.Linear(60, 12)
 
     def forward(self, x, softmax_dim=1):
         x = self.encoder1(x)[:, :, :, 0]
@@ -27,17 +27,15 @@ class InvestmentSelect(nn.Module):
 
 
 class PositionDecisioner(nn.Module):
-    def __init__(self, incode, size, device):
+    def __init__(self, incode,device):
         super(PositionDecisioner, self).__init__()
         self.incode = incode
         self.device = device
-        self.encoder1 = nn.Linear(size, 1)
-        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
-        self.q = nn.Linear(120, 3)
-        self.v = nn.Linear(120, 1)
+        self.tencoder = Transformer(incode, 60, 1, 512, 8, 4, 0.1)
+        self.q = nn.Linear(60, 3)
+        self.v = nn.Linear(60, 1)
 
     def setposition(self, x, softmax_dim=1):
-        x = self.encoder1(x)[:, :, :, 0]
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
         x = func.relu(self.tencoder(x, src_mask))
         del src_mask
@@ -47,7 +45,6 @@ class PositionDecisioner(nn.Module):
         return func.softmax(x, dim=softmax_dim)
 
     def value(self, x):
-        x = self.encoder1(x)[:, :, :, 0]
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
         x = func.relu(self.tencoder(x, src_mask))
         del src_mask
@@ -57,17 +54,15 @@ class PositionDecisioner(nn.Module):
 
 
 class Determiner(nn.Module):
-    def __init__(self, incode, size, device):
+    def __init__(self, incode, device):
         super(Determiner, self).__init__()
         self.incode = incode
         self.device = device
-        self.encoder1 = nn.Linear(size, 1)
-        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
-        self.determiner = nn.Linear(120, 2)
-        self.v = nn.Linear(120, 1)
+        self.tencoder = Transformer(incode, 60, 1, 512, 16, 8, 0.1)
+        self.determiner = nn.Linear(60, 2)
+        self.v = nn.Linear(60, 1)
 
     def determine(self, x, softmax_dim=1):
-        x = self.encoder1(x)[:, :, :, 0]
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
         x = func.relu(self.tencoder(x, src_mask))
         del src_mask
@@ -77,7 +72,6 @@ class Determiner(nn.Module):
         return func.softmax(x, dim=softmax_dim)
 
     def value(self, x):
-        x = self.encoder1(x)[:, :, :, 0]
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
         x = func.relu(self.tencoder(x, src_mask))
         del src_mask
@@ -87,17 +81,15 @@ class Determiner(nn.Module):
 
 
 class Leverage(nn.Module):
-    def __init__(self, incode, size, device):
+    def __init__(self, incode,  device):
         super(Leverage, self).__init__()
         self.incode = incode
         self.device = device
-        self.encoder1 = nn.Linear(size, 1)
-        self.tencoder = Transformer(incode, 120, 12, 256, 8, 4, 0.1)
-        self.determine = nn.Linear(120, 2)
-        self.v = nn.Linear(120, 1)
+        self.tencoder = Transformer(incode, 60, 1, 512, 16, 8, 0.1)
+        self.determine = nn.Linear(60, 2)
+        self.v = nn.Linear(60, 1)
 
     def setleverage(self, x, softmax_dim=1):
-        x = self.encoder1(x)[:, :, :, 0]
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
         x = func.relu(self.tencoder(x, src_mask))
         del src_mask
@@ -107,7 +99,6 @@ class Leverage(nn.Module):
         return func.softmax(x, dim=softmax_dim)
 
     def value(self, x):
-        x = self.encoder1(x)[:, :, :, 0]
         src_mask = self.tencoder.generate_square_subsequent_mask(x.shape[1]).to(self.device)
         x = func.relu(self.tencoder(x, src_mask))
         del src_mask
@@ -119,8 +110,7 @@ class Leverage(nn.Module):
 class TrendReader(nn.Module):
     def __init__(self, insize, size, outsize):
         super(TrendReader, self).__init__()
-        self.tencoder = Transformer(insize, 120, size, 256, 8, 4, 0.1)
-
+        self.tencoder = Transformer(insize, 120, size, 256, 16, 8, 0.1)
         self.v = nn.Linear(120, outsize)
 
     def value(self, x, device):
