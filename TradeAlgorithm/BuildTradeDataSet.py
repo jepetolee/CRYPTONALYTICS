@@ -5,6 +5,28 @@ from tqdm import trange
 from pathlib import Path
 
 
+class TradeDatasetBuilder:
+
+    def __init__(self, data, input_data=60, stride=3):
+        label = data.shape[0]
+        data = data.T[3]
+        data = data.T
+        samples = int((label - input_data) // stride) + 1
+
+        X = np.zeros(([samples, input_data]))
+        for i in range(samples):
+            # build data set fot X, Y
+            startx = stride * i
+            endx = startx + input_data
+
+            X[i] = data[startx:endx]
+
+        self.x = X
+
+    def pop(self):
+        return self.x
+
+
 class DatasetBuilder:
 
     def __init__(self, data, input_data=60, output=20, stride=3):
@@ -186,6 +208,15 @@ def OneHourDataSetOut():
     return data_bundleX, data_bundleY
 
 
+def TradeDataSetOut(symbol):
+
+    return TradeDatasetBuilder(FutureOneMinuteData(symbol), 50, 1).pop()
+
+
+
+
+
+
 def BuildBatchTrainDataset(batchsize=16, built=False):
     path = 'D:/CRYPTONALYTICS/TradeAlgorithm/datasets/hour/'
     dataX, dataY, dataX_prime = OneHourTrainDataSetOut()
@@ -212,7 +243,7 @@ def BuildBatchTrainDataset(batchsize=16, built=False):
                 if dataX[i].shape[0] < biggest - batchsize * t:
                     input = torch.zeros([batchsize, 14 * 24, 14])
                     input_prime = input.detach()
-                    out.append(torch.zeros([batchsize, 1])-99)
+                    out.append(torch.zeros([batchsize, 1]) - 99)
 
                 else:
                     if first[i]:
@@ -220,7 +251,7 @@ def BuildBatchTrainDataset(batchsize=16, built=False):
                         locker[i] = t + 1
                         input = torch.zeros([batchsize, 14 * 24, 14])
                         input_prime = input.detach()
-                        out_frame = torch.zeros([batchsize, 1])-99
+                        out_frame = torch.zeros([batchsize, 1]) - 99
 
                         for j in range(parse[i]):
                             input[batchsize - parse[i] + j] = torch.from_numpy(dataX[i][j]).float()
@@ -256,3 +287,6 @@ def BuildBatchTrainDataset(batchsize=16, built=False):
             torch.save(builts_prime, path + 'X_prime/' + str(t + 1) + '.pt')
 
     return size
+
+
+

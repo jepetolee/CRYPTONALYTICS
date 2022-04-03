@@ -16,14 +16,15 @@ def TrainingTrader(symbol, device, saved=False):
         determine.load_state_dict('./model/' + symbol + '_determine.pt')
         position.load_state_dict('./model/' + symbol + '_position.pt')
     update_future_1min_csv(symbol)
-    dataset = TradeDataSetOut()
-    dataset_train = dataset[number]
-    del dataset
-    gc.collect()
+    dataset = TradeDataSetOut(symbol)
+
     epoch = 1000
     for _i in trange(epoch):
-        for t in range(len(dataset_train)):
-            print("도랄팍쥐 화이팅")
+        for t in range(dataset.shape[0]):
+
+            tensor = torch.from_numpy(dataset[t]).to(device)
+            leverage.setleverage(tensor)
+
 
 
 TrainingTrader('BTCUSDT','cpu')
