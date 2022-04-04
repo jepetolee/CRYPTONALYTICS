@@ -13,5 +13,5 @@ def FutureOneMinuteData(symbol):
     return future_symbol_1min_data(symbol).to_numpy()
 
 
-def ProphetOneMinute():
-    print("1분봉 예측값은 다음과 같습니다.")
+def FutureOneMinuteDerivative(symbol):
+    return np.gradient(future_symbol_1min_data(symbol).to_numpy())
