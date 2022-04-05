@@ -19,6 +19,7 @@ def pretrain_hour(device, saved=False, grad_lock=False, batchsize=16, builded=Fa
 
     optimizer = torch.optim.Adam(model_inv.parameters(), lr=4e-6)
 
+
     for _i in range(epoch):
         batch_loss = 0.0
         length = tqdm(range(size - passer))

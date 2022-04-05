@@ -57,6 +57,7 @@ def update_future_15min_csv():
         try:
             data = pd.read_csv(url)
             data_time = data['0'].copy().to_numpy().astype('datetime64[ms]')
+
             day = pd.DataFrame(
                 client.futures_historical_klines(symbol=symbol[i], interval='15m', start_str=str(data_time[-1]),
                                                  limit=1000)).drop(index=0, axis=0)
@@ -77,7 +78,7 @@ def update_future_1min_csv(symbol):
     try:
         data = pd.read_csv(url)
         data_time = data['0'].copy().to_numpy().astype('datetime64[ms]')
-
+        print(data_time[-1])
         day = pd.DataFrame(
             client.futures_historical_klines(symbol=symbol, interval='1m', start_str=str(data_time[-1]),
                                              limit=1000)).drop(index=0, axis=0)
