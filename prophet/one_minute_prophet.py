@@ -1,6 +1,5 @@
 import talib.abstract as ta
 from talib import MA_Type
-from neuralprophet import NeuralProphet
 from numpy import log
 from pandas import DataFrame
 import numpy as np

@@ -3,7 +3,112 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="\TradeAlgorithm\csv\future\15min\15min_data_BTCUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\15min\15min_data_LUNAUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\15min\15min_data_SOLUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\TradeAlgorithm\csv\future\1day\daily_data_BTCUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1hour\1hour_data_AVAXUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1hour\1hour_data_BCHUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1hour\1hour_data_BTCUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1hour\1hour_data_SOLUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1min\1min_data_BTCUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1min\1min_data_ETHUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1min\1min_data_SOLUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\1min\1min_data_WAVESUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\4hour\4hour_data_BTCUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\future\4hour\4hour_data_LUNAUSDT.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\csv\temp.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\TradeAlgorithm\temp.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

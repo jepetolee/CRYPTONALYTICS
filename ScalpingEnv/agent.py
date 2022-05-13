@@ -9,7 +9,7 @@ class FutureAgent:
 
         self.agent = Client(api_key=api_key, api_secret=api_secret, testnet=test)
 
-        self.leverage = 1
+        self.leverage = 20
         # 현재 잔고 조회
         self.withdrawAvailable = 1
         self.shutdown = False
@@ -101,11 +101,8 @@ class FutureAgent:
                 self.agent.futures_create_order(symbol=self.symbol, type='LIMIT', timeInForce='GTC',
                                                     price=position[0], side=position[1], quantity=position[2])
 
-                self.agent.futures_create_order(symbol=self.symbol, type='STOP_MARKET', timeInForce='GTC',
+                self.agent.futures_create_order(symbol=self.symbol, type='STOP_LOSS_LIMIT', timeInForce='GTC',
                                                     stopPrice=self.stop_price, side=self.position, quantity=position[2])
-
-                self.agent.futures_create_order(symbol=self.symbol, type='TAKE_PROFIT_MARKET',  timeInForce='GTC',
-                                                stopPrice=self.profit_price, side=self.position, quantity=position[2])
 
                 self.position_price = position[0]
                 self.quantity = position[2]
@@ -127,13 +124,18 @@ class FutureAgent:
     # 현 계좌 체크
     def check_account(self):
         try:
-            account = self.agent.futures_account_balance()
-            account = DataFrame.from_dict(account)
+            account_info = self.agent.futures_account()
 
-            account = account.loc[account['asset'] == 'USDT']
+            av_balance = None
+            for asset in account_info["assets"]:
+                if asset["asset"] == "USDT":
+                    av_balance = float(asset["availableBalance"])
 
-            self.account = float(account['balance'].values)
-            self.withdrawAvailable = float(account['withdrawAvailable'].values)
+            if len(account_info) > 0:
+                av_balance = float("{:.2f}".format(av_balance))
+
+            self.account = av_balance
+            self.withdrawAvailable = 0
         except BinanceAPIException as e:
             self.shutdown = True
             print("Agent: 계좌와 연동에 실패했습니다! api를 확인해주세요!" + str(e))
@@ -182,4 +184,4 @@ class FutureAgent:
     def order_able(self):
         self.check_current()
         self.check_account()
-        return self.leverage * self.account - 1e-2  # 주문오류 방지를 위한 극소량차감
+        return self.leverage * self.account # 주문오류 방지를 위한 극소량차감

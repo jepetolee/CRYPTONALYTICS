@@ -1,3 +1,4 @@
+import time
 import warnings
 import numpy as np
 import sys
@@ -25,7 +26,7 @@ import pandas as pd
 from torch.distributions import Categorical
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-
+import ScalpingEnv as sc
 from mpl_finance import candlestick2_ohlc
 
 
@@ -40,43 +41,46 @@ def build_numpy(data, temper):
     copies = data[3].copy()
     axes[0].plot(data.index + 1, copies.rolling(window=3).mean(), label='Ma3')
     axes[0].plot(data.index + 1, copies.rolling(window=14).mean(), label='Ma14')
-    plt.savefig('D:/CRYPTONALYTICS/TrainingModel/' + temper + '_day.png', dpi=100)
+    plt.savefig('D:/CRYPTONALYTICS/TrainingModel/' + temper + '.png', dpi=100)
     plt.close('all')
-    X = PIL.Image.open('D:/CRYPTONALYTICS/TrainingModel/' + temper + '_day.png').convert("L")
+    X = PIL.Image.open('D:/CRYPTONALYTICS/TrainingModel/' + temper + '.png').convert("L")
     x = np.array(X)
     X.close()
     return x
 
 
-def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=False):  # (XRP,BNB,BTC,ETH)
-    print("일일 거래")
+def ScalpRealWorld(symbol, device, leveragen, shaker=0.43, impulse=-1.5, saved=False,
+                   grad_lock=False):  # (XRP,BNB,BTC,ETH)
+    print("스켈핑")
     trader = Trader(device).to(device)
     client = Client(api_key="", api_secret="")
 
     if saved:
-        trader.load_state_dict(torch.load('./model/' + symbol + '_trader.pt'))
+        trader.load_state_dict(torch.load('./model/' + symbol + '_scalper.pt'))
 
     trans = transforms.Compose([transforms.ToTensor(),
                                 transforms.Resize(size=(500, 500)),
                                 transforms.Normalize(0.5, 0.5)])
     # <---------------------------------------------------------------------->
+
     current_time = datetime.now().strftime("%H:%M:%S")
     print(current_time + '에 시작')
+
     # <---------------------------------------------------------------------->
 
-    onehour = client.futures_klines(symbol=symbol, interval='1d', limit=1500)
-    onehour = pd.DataFrame(np.array(onehour, dtype=np.float)[-45:].T[1:6].T)
+    onehour = client.futures_klines(symbol=symbol, interval='1h', limit=1500)
+    onehour = pd.DataFrame(np.array(onehour, dtype=np.float)[-72:].T[1:6].T)
     onehour = build_numpy(onehour, symbol)
     s_oneH = trans(onehour).float().to(device).reshape(-1, 1, 500, 500)
     sleep(0.1)
 
     fifteen_data = client.futures_klines(symbol=symbol, interval='15m', limit=1500)
-    fifteen_data = pd.DataFrame(np.array(fifteen_data, dtype=np.float)[-120:].T[1:6].T)
+    fifteen_data = pd.DataFrame(np.array(fifteen_data, dtype=np.float)[-90:].T[1:6].T)
     fifteen_data = build_numpy(fifteen_data, symbol)
     s_oneF = trans(fifteen_data).float().to(device).reshape(-1, 1, 500, 500)
 
-    oneminute_data = client.futures_klines(symbol=symbol, interval='4h', limit=1500)
-    oneminute_data = pd.DataFrame(np.array(oneminute_data, dtype=np.float)[-60:].T[1:6].T)
+    oneminute_data = client.futures_klines(symbol=symbol, interval='1m', limit=1500)
+    oneminute_data = pd.DataFrame(np.array(oneminute_data, dtype=np.float)[-120:].T[1:6].T)
     oneminute_data = build_numpy(oneminute_data, symbol)
     s_oneM = trans(oneminute_data).float().to(device).reshape(-1, 1, 500, 500)
 
@@ -84,17 +88,37 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
     hidden = (
         torch.zeros([1, 1, 16], dtype=torch.float).to(device), torch.zeros([1, 1, 16], dtype=torch.float).to(device))
     h_in = [hidden, hidden, hidden]
+    total_score = 0.0
     benefit = 100
     selecter = True
-    position = False
+    position = 0
     t = 0
-    locker, ring, counter = 74, 0, 1
+    changer, urge = shaker, impulse
     while True:
-        sleep(1)
-        # <---------------------------------------------------------------------->
-        current_price = float(client.futures_symbol_ticker(symbol=symbol, limit=1500)['price'])
-        if selecter:
+        onehour = client.futures_klines(symbol=symbol, interval='1h', limit=1500)
+        onehour = pd.DataFrame(np.array(onehour, dtype=np.float)[-72:].T[1:6].T)
+        onehour = build_numpy(onehour, symbol)
+        sprime_oneH = trans(onehour).float().to(device).reshape(-1, 1, 500, 500)
 
+        sleep(0.1)
+        oneminute_data = client.futures_klines(symbol=symbol, interval='1m', limit=1500)
+        oneminute_data = pd.DataFrame(np.array(oneminute_data, dtype=np.float)[-120:].T[1:6].T)
+        oneminute_data = build_numpy(oneminute_data, symbol)
+        sprime_oneM = trans(oneminute_data).float().to(device).reshape(-1, 1, 500, 500)
+
+        sleep(0.1)
+        fifteen_data = client.futures_klines(symbol=symbol, interval='15m', limit=1500)
+        fifteen_data = pd.DataFrame(np.array(fifteen_data, dtype=np.float)[-90:].T[1:6].T)
+        fifteen_data = build_numpy(fifteen_data, symbol)
+        sprime_oneF = trans(fifteen_data).float().to(device).reshape(-1, 1, 500, 500)
+
+        sleep(0.1)
+        current_price = float(client.futures_symbol_ticker(symbol=symbol, limit=1500)['price'])
+
+        sleep(0.1)
+        # <---------------------------------------------------------------------->
+
+        if selecter:
             with torch.no_grad():
                 position_t, h_out = trader.SetPosition(s_oneH, s_oneF, s_oneM, h_in)
 
@@ -110,101 +134,90 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             h_outP = h_out
             if position_a == 0:
                 position_v = 'LONG'
+                best_reward = 0
                 selected_price = current_price
+
                 selecter = False
             elif position_a == 1:
                 position_v = 'SHORT'
+                best_reward = 0
                 selected_price = current_price
+
                 selecter = False
             else:
                 position_v = 'NONE'
+                best_reward = 0
                 selected_price = current_price
                 selecter = False
             print(position_v + ': ', current_price)
 
         # <---------------------------------------------------------------------->
-        difference = (0.9998 * current_price - selected_price)
+        reward = (0.9998 * current_price - selected_price) / selected_price * 100
+
         if position_v == 'SHORT':
-            difference = (0.9998 * selected_price - current_price)
-        if position_v == 'NONE' and difference > 0:
-            difference *= -1
+            reward = (0.9998 * selected_price - current_price) / selected_price * 100
 
-        # <---------------------------------------------------------------------->
-        if difference < impulse + locker * (counter - 1) and difference < 0:
+        if position_v == 'NONE' and reward > 0:
+            reward_original = 0
+        else:
+            reward *= leveragen
+
+        reward_original = reward
+
+        if reward > best_reward:
+            best_reward = reward
+        else:
+            reward -= best_reward
+
+        if t % 15 == 0:
+            print(current_price, reward_original)
+        if t % 45 == 0:
+            if reward_original < -1.2:
+                urge *= 0.95
+
+        if reward_original < urge:
+            if reward_original < impulse:
+                reward_original = impulse
             selecter = True
-            difference = impulse + locker * (counter - 1)
-            reward = -1
-            counter = 1
-            ring = 0
+            changer = shaker
+            urge = impulse
 
-        if difference > 200 + locker * ring:
-            ring += 1
-            position = True
-
-        if difference > locker * counter:
-            counter += 1
-
-        if position:
-            if difference <= 100 + locker * (ring - 1):
-                difference = 100 + locker * (ring - 1)
-                reward = ring
-                selecter = True
-                position = False
-                ring = 0
-                counter =1
+        elif reward_original > changer:  # 큰거 -0.76 작은거:-0.43
+            changer = shaker
+            selecter = True
+            urge = impulse
 
         elif position_v is 'NONE':
-            difference = 0
-            sleep(900)
-            reward = 0
-            counter = 1
-            ring =0
             selecter = True
-
-        percent = leveragen * difference / selected_price * 100
+            changer = shaker
+            urge = impulse
+            time.sleep(300)
         # <---------------------------------------------------------------------->
+
         if selecter:
             if position_v is not 'NONE':
-                sleep(900)
-                benefit *= (1 + percent / 100)
-
-            onehour = client.futures_klines(symbol=symbol, interval='4h', limit=1500)
-            onehour = pd.DataFrame(np.array(onehour, dtype=np.float)[-45:].T[1:6].T)
-            onehour = build_numpy(onehour, symbol)
-            sprime_oneH = trans(onehour).float().to(device).reshape(-1, 1, 500, 500)
-
-            oneminute_data = client.futures_klines(symbol=symbol, interval='1h', limit=1500)
-            oneminute_data = pd.DataFrame(np.array(oneminute_data, dtype=np.float)[-60:].T[1:6].T)
-            oneminute_data = build_numpy(oneminute_data, symbol)
-            sprime_oneM = trans(oneminute_data).float().to(device).reshape(-1, 1, 500, 500)
-            fifteen_data = client.futures_klines(symbol=symbol, interval='15m', limit=1500)
-            fifteen_data = pd.DataFrame(np.array(fifteen_data, dtype=np.float)[-120:].T[1:6].T)
-            fifteen_data = build_numpy(fifteen_data, symbol)
-            sprime_oneF = trans(fifteen_data).float().to(device).reshape(-1, 1, 500, 500)
+                sleep(120)
+                benefit *= (1 + reward_original / 100)
+            print(str(round(benefit, 2)) + "% " + position_v + " reward is " + str(round(reward_original, 2)),
+                  current_price)
+            if reward_original < 0:
+                reward_original *= 10
 
             trader.TrainModelP(s_oneHP, s_oneFP, s_oneMP,
                                sprime_oneH, sprime_oneF, sprime_oneM, h_inP, h_outP,
-                               position_a, position_prob, reward)
-            torch.save(trader.state_dict(), './model/' + symbol + '_trader.pt')
-            print(str(round(benefit, 2)) + "% " + position_v + " reward is " + str(round(percent, 2)),
-                  current_price)
+                               position_a, position_prob, reward_original * 5)
+            torch.save(trader.state_dict(), './model/' + symbol + '_scalper.pt')
 
-            s_oneM = sprime_oneM
-            s_oneF = sprime_oneF
-            s_oneH = sprime_oneH
-            h_in = h_out
+        s_oneM = sprime_oneM
+        s_oneF = sprime_oneF
+        s_oneH = sprime_oneH
 
-        if t % 300 == 0:
-            print(current_price, percent)
+        h_in = h_out
+        if t % 75 == 0:
+            if reward_original > 0 and abs(reward) < changer:
+                changer *= 0.75
+
         t += 1
 
 
-DayRealWorld('BTCUSDT', 'cpu', 20, impulse=-200, saved=True)  # 큰거 20 작은거 5
-
-'''
-SOLUSDT
- 'TRXUSDT',
- 'AVAXUSDT',
- 'NEARUSDT',
- 'USDCUSDT'               
-'''
+ScalpRealWorld('BTCUSDT', 'cpu', 20, saved=True, shaker=5, impulse=-5, grad_lock=False)

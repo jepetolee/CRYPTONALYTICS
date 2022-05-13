@@ -48,8 +48,8 @@ def build_numpy(data, temper):
     return x
 
 
-def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=False):  # (XRP,BNB,BTC,ETH)
-    print("일일 거래")
+def DayRealChad(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=False):  # (XRP,BNB,BTC,ETH)
+    print("AwesomeChad")
     trader = Trader(device).to(device)
     client = Client(api_key="", api_secret="")
 
@@ -88,7 +88,7 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
     selecter = True
     position = False
     t = 0
-    locker, ring, counter = 74, 0, 1
+    locker, ring = 20, 1
     while True:
         sleep(1)
         # <---------------------------------------------------------------------->
@@ -130,42 +130,37 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             difference *= -1
 
         # <---------------------------------------------------------------------->
-        if difference < impulse + locker * (counter - 1) and difference < 0:
-            selecter = True
-            difference = impulse + locker * (counter - 1)
-            reward = -1
-            counter = 1
-            ring = 0
-
-        if difference > 200 + locker * ring:
-            ring += 1
-            position = True
-
-        if difference > locker * counter:
-            counter += 1
-
-        if position:
-            if difference <= 100 + locker * (ring - 1):
-                difference = 100 + locker * (ring - 1)
-                reward = ring
-                selecter = True
-                position = False
-                ring = 0
-                counter =1
-
-        elif position_v is 'NONE':
-            difference = 0
-            sleep(900)
-            reward = 0
-            counter = 1
-            ring =0
-            selecter = True
 
         percent = leveragen * difference / selected_price * 100
         # <---------------------------------------------------------------------->
+        if percent < impulse:
+            selecter = True
+            percent = impulse
+            reward = -1
+            ring = 1
+
+        if difference > locker * ring:
+            ring += 1
+            position = True
+
+        if position:
+            if difference <= locker * (ring - 1)-10:
+                difference = locker * (ring - 1)-10
+                reward = ring-1
+                selecter = True
+                position = False
+                ring = 1
+
+        elif position_v is 'NONE':
+            percent = 0
+            sleep(10800)
+            reward = 0
+            ring = 1
+            selecter = True
+
         if selecter:
             if position_v is not 'NONE':
-                sleep(900)
+                sleep(700)
                 benefit *= (1 + percent / 100)
 
             onehour = client.futures_klines(symbol=symbol, interval='4h', limit=1500)
@@ -194,12 +189,12 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             s_oneH = sprime_oneH
             h_in = h_out
 
-        if t % 300 == 0:
+        if t % 75 == 0:
             print(current_price, percent)
         t += 1
 
 
-DayRealWorld('BTCUSDT', 'cpu', 20, impulse=-200, saved=True)  # 큰거 20 작은거 5
+DayRealChad('BTCUSDT', 'cpu', 125, impulse=-10, saved=True)  # 큰거 20 작은거 5
 
 '''
 SOLUSDT

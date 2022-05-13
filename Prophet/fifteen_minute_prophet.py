@@ -41,3 +41,5 @@ def FutureProphetFifteenMinute():
     return arrays
 
 
+def FutureFifteenMinuteData(symbol):
+    return future_symbol_15min_data(symbol).to_numpy()

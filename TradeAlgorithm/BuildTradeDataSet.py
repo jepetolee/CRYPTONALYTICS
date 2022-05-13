@@ -1,30 +1,82 @@
+import gc
 import numpy as np
+import sys
+
+sys.path.append('..')
 from Prophet import *
 import torch
 from tqdm import trange
 from pathlib import Path
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+from mpl_finance import candlestick2_ohlc
+from TradeAlgorithm.update_csv import *
+from make_pd import *
 
 
-class TradeDatasetBuilder:
+def TradeDatasetBuilder(data, input_data=60, stride=3):
+    label = data.shape[0]
+    data = data.T[:3].T
 
-    def __init__(self, data, input_data=60, stride=3):
-        label = data.shape[0]
-        data = data.T[3]
-        data = data.T
-        samples = int((label - input_data) // stride) + 1
 
-        X = np.zeros(([samples, input_data]))
-        for i in range(samples):
-            # build data set fot X, Y
-            startx = stride * i
-            endx = startx + input_data
+    samples = int((label - input_data) // stride) + 1
 
-            X[i] = data[startx:endx]
+    X = np.zeros(([samples, input_data, 3]))
+    for i in range(samples):
+        # build data set fot X, Y
+        startx = stride * i
+        endx = startx + input_data
 
-        self.x = X
+        X[i] = data[startx:endx]
+    return X
 
-    def pop(self):
-        return self.x
+
+def FinalDatasetBuilder(data, symbol, date, passer=0, stop=0, input_data=60, stride=3):
+    label = data.shape[0]
+    samples = int((label - input_data) // stride)
+    if date == "1h":
+        time = '1hour/'
+    elif date == '15m':
+        time = '15min/'
+    elif date == '1m':
+        time = '1min/'
+    elif date == '15m2':
+        time = '15min2/'
+    elif date == '4h':
+        time = '4hour/'
+    elif date == '1d':
+        time = '1day/'
+    if stop == 0:
+        stop = samples
+    for i in trange(stop - passer + 1):
+        # build data set fot X, Y
+        i += passer
+        startx = stride * i
+        endx = startx + input_data
+
+        temp = data.iloc[startx:endx]
+
+        temp.reset_index(inplace=True)
+        temp.index += 1
+
+        fig = plt.figure(figsize=(20, 20))
+        gs = gridspec.GridSpec(2, 4)
+        fig.subplots_adjust(wspace=0.2, hspace=0.2)
+
+        axes = list()
+        axes.append(plt.subplot(gs[0, :]))
+        axes.append(plt.subplot(gs[1, :], sharex=axes[0]))
+
+        candlestick2_ohlc(axes[0], temp['1'], temp['2'], temp['3'], temp['4'], width=1, colorup='r', colordown='b')
+        axes[1].bar(temp.index, temp['5'], color='k', width=0.8, align='center')
+        copies = temp['4'].copy()
+        axes[0].plot(temp.index, copies.rolling(window=3).mean(), label='Ma3')
+        axes[0].plot(temp.index, copies.rolling(window=14).mean(), label='Ma14')
+
+        plt.savefig('D:/CRYPTONALYTICS/TradeAlgorithm/dataset/' + symbol + '/' + time + str(i) + '.png', dpi=50)
+        plt.close('all')
+        del axes, temp, gs, fig
+        gc.collect()
 
 
 class DatasetBuilder:
@@ -126,36 +178,9 @@ def CurrentDataOut():
     return datasets
 
 
-def OneDayTrainDataSetOut():
-    data = FutureOneDayData()
-    mupper, mmiddles = FutureOneDayMacd()
-
-    data_bundleX, data_bundleY, data_bundleX_prime = list(), list(), list()
-    rsi = FutureOneDayRsi()
-    upper, middles, lows = FutureOneDayBBands()
-    logs, variance = FutureOneDaylog(), FutureOneDayVariancePercent()
-    for i in range(len(data)):
-        dataset = np.vstack([data[i][14:].T, rsi[i][14:]])
-        dataset = np.vstack([dataset, mupper[i][14:]])
-        dataset = np.vstack([dataset, mmiddles[i][14:]])
-        dataset = np.vstack([dataset, logs[i][14:]])
-        dataset = np.vstack([dataset, upper[i][14:]])
-        dataset = np.vstack([dataset, middles[i][14:]])
-        dataset = np.vstack([dataset, lows[i][14:]])
-        dataset = np.vstack([dataset, gradients[i][14:]]).T
-
-        datasetX, datasetY, datasetX_prime = DatasetTrainBuilder(dataset, 14, 1, 4).pop()
-        data_bundleX.append(datasetX)
-        data_bundleY.append(datasetY)
-        data_bundleX_prime.append(datasetX_prime)
-
-    return data_bundleX, data_bundleY, data_bundleX_prime
-
-
 def OneHourTrainDataSetOut():
     data = FutureOneHourData()
     mupper, mmiddles = FutureOneHourMacd()
-
     data_bundleX, data_bundleY, data_bundleX_prime = list(), list(), list()
     rsi = FutureOneHourRsi()
     upper, middles, lows = FutureOneHourBBands()
@@ -209,12 +234,11 @@ def OneHourDataSetOut():
 
 
 def TradeDataSetOut(symbol):
-
-    return TradeDatasetBuilder(FutureOneMinuteData(symbol), 50, 1).pop()
-
+    return TradeDatasetBuilder(FutureOneMinuteData(symbol), 60, 1)
 
 
-
+def TradeData2SetOut(symbol):
+    return TradeDatasetBuilder(FutureFifteenMinuteData(symbol), 120, 1)
 
 
 def BuildBatchTrainDataset(batchsize=16, built=False):
@@ -289,4 +313,37 @@ def BuildBatchTrainDataset(batchsize=16, built=False):
     return size
 
 
+def DatasetFinal(symbol):
+    update_future_15min_csv(symbol)
+    update_future_1hour_csv(symbol)
+    update_future_1min_csv(symbol)
 
+    onehour = future_symbol_1hour_data(symbol)
+    fifteen_data = future_symbol_15min_data(symbol)
+    oneminute_data = future_symbol_1min_data(symbol)
+    FinalDatasetBuilder(oneminute_data, symbol, '1m', passer=7140 + 72000, input_data=60, stride=1)
+    FinalDatasetBuilder(fifteen_data, symbol, '15m', passer=5180, input_data=4 * 24, stride=1)
+    FinalDatasetBuilder(onehour, symbol, '1h', passer=1200, input_data=24 * 5, stride=1)
+
+
+def DatasetFinal2(symbol):
+    # update_future_15min_csv(symbol)
+    # update_future_4hour_csv(symbol)
+    # update_future_1hour_csv(symbol)
+    oneday_data = future_symbol_1hour_data(symbol)
+    fourhour_data = future_symbol_4hour_data(symbol)
+    fifteenminute_data = future_symbol_15min_data(symbol)
+    FinalDatasetBuilder(fifteenminute_data, symbol, '15m2', passer=90387, stop=90388, input_data=120, stride=1)
+
+
+#  FinalDatasetBuilder(oneday_data, symbol, '1h', passer=19249,stop =0, input_data=60, stride=1)
+#   FinalDatasetBuilder(fourhour_data, symbol, '4h', passer=0, input_data=45, stride=1)
+
+'''
+DatasetFinal2('BTCUSDT')
+import PIL
+for i in range(92477-90388):
+    print(i)
+    sprime_FiftMP = PIL.Image.open(
+        'D:/CRYPTONALYTICS/TradeAlgorithm/dataset/BTCUSDT/15min2/' + str(i+90388) + '.png').convert("L")
+    sprime_FiftMP.close()'''

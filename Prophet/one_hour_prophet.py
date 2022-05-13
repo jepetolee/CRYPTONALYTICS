@@ -55,6 +55,7 @@ def FutureOneHourData():
     return array
 
 
+
 def FutureOneHourlog():
     arrays = []
     symbol = ['BTCUSDT',
@@ -92,7 +93,7 @@ def FutureProphetOneHour():
               'LTCUSDT',
               'NEARUSDT']
 
-    f = open('D:/CRYPTONALYTICS/TrainingModel/predict/onehour/predict.txt',"w")
+    f = open('D:/CRYPTONALYTICS/TrainingModel/predict/onehour/predict.txt', "w")
 
     for _i in range(len(symbol)):
         data = future_symbol_1hour_data(symbol[_i])
@@ -105,7 +106,7 @@ def FutureProphetOneHour():
             dates, predicted, components = prophet._predict_raw(df, include_components=True)
             arrays.append((predicted[-12]))
 
-            f.writelines(str(predicted[-12])+'\n')
+            f.writelines(str(predicted[-12]) + '\n')
     f.close()
     return arrays
 
@@ -200,9 +201,6 @@ def FutureOneHourDerivative():
 
         data = future_symbol_1hour_data(symbol[_i])
         if data is not None:
-
             array.append(np.gradient(data['4'].to_numpy()))
 
     return array
-
-

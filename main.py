@@ -1,21 +1,15 @@
-# import crypto packages
-import ccxt as crypto_main
-
 # import settings
 import sys
-
-# import binance from ccxt
-binance = crypto_main.binance()
 
 # GUI
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5.QtChart import *
+
 
 # series data
 
-#call libs
+# call libs
 
 
 # UI design
@@ -23,7 +17,6 @@ class CRYPTONALYTICS(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.centralwidget = QStackedWidget()
         self.initUI()
 
         # global variables- keys
@@ -51,40 +44,14 @@ class CRYPTONALYTICS(QMainWindow):
             self.binance_api = str(API)
             binance_file = open("./API/binance", "w")
             binance_file.write(str(self.binance_api))
+
             binance_file.close()
 
-    # change to analytic widget
-    def change2analytics(self):
-        self.centralwidget.setCurrentIndex(1)
-
-    # change to main widget
-    def change2info(self):
-        self.centralwidget.setCurrentIndex(0)
-
-    @pyqtSlot(float)
-    def get_price(self, cur_price):
-        # append current price
-        dt = QDateTime.currentDateTime()
-        self.statusBar().showMessage(dt.toString())
-        self.ticks[dt] = cur_price
-
-        # check whether minute changed
-        # if dt.time().minute() != self.minute_cur.time().minute():
-
-        ts = dt.toMSecsSinceEpoch()
-
-        sets = self.series.sets()
-        last_set = sets[-1]
-
-        open = last_set.open()
-        high = last_set.high()
-        low = last_set.low()
-        close = last_set.close()
-        ts1 = last_set.timestamp()
-        self.series.remove(last_set)  # remove last set
-
-        new_set = QCandlestickSet(open, high, low, cur_price, ts1)
-        self.series.append(new_set)
+    def initialize(self):
+        self.info_widget.setLayout()
+        self.info_widget.repaint()
+        self.setCentralWidget(self.info_widget)
+        self.show()
 
     def initUI(self):
         # images,deposit, title
@@ -116,11 +83,10 @@ class CRYPTONALYTICS(QMainWindow):
         binance_action.setStatusTip('check the binance api')
         binance_action.triggered.connect(self.binance_API)
 
-        # analytic method
-        chart_analysis = QAction('기술적 분석', self)
-        chart_analysis.setShortcut('Ctrl+A')
-        chart_analysis.setStatusTip('차트를 분석합니다')
-        chart_analysis.triggered.connect(lambda: self.change2analytics())
+        trade_action = QAction('자동투자기로 이동', self)
+        trade_action.setShortcut('Ctrl+T')
+        trade_action.setStatusTip('check the binance api')
+        trade_action.triggered.connect(lambda: self.initialize)
 
         # menubar & widget
         menubar = self.menuBar()
@@ -135,12 +101,9 @@ class CRYPTONALYTICS(QMainWindow):
         key.addAction(upbit_action)
         key.addAction(binance_action)
 
-        # menu-chart
-        analytics = menubar.addMenu('기술적 분석')
-        analytics.addAction(chart_analysis)  # 로그차트만
-
         # reinforcement trading
         auto_trading = menubar.addMenu('자동 투자')
+        auto_trading.addAction(trade_action)
         # 자동투자 인공지능 스켈핑- 예측 투자후 안되면 빠지기-생존의 스켈핑 즉 주식을 오래 보유 하지 않고 이득을 먹고 탁탁 나오게끔\
         # 바이낸스 이자율 0.02% 99.98%의 자금 손실비
         # 2 자동투자 스윙 투자: 상승장, 박스장, 하락장을 구분할 수 있어야함.
@@ -172,12 +135,10 @@ class CRYPTONALYTICS(QMainWindow):
         main_layout.addWidget(main_info)
         main_layout.addWidget(main_text)
 
-        info_widget = QWidget()
-        info_widget.setLayout(main_layout)
+        self.info_widget = QWidget()
+        self.info_widget.setLayout(main_layout)
 
-        self.centralwidget.addWidget(info_widget)
-
-        self.setCentralWidget(self.centralwidget)
+        self.setCentralWidget(self.info_widget)
 
         self.show()
 

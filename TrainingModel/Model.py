@@ -1,6 +1,7 @@
 import math
 import torch
 from torch import nn
+from torch.functional import F
 
 
 class Transformer(nn.Module):
@@ -61,3 +62,24 @@ class PositionalEncoding(nn.Module):
 
 def gen_attention_mask(x):
     return torch.eq(x, 0)
+
+
+class Encoder(nn.Module):
+    def __init__(self):
+        super(Encoder, self).__init__()
+        self.conv1 = nn.Conv2d(1, 5, 5, stride=1)
+        self.max_pool1 = nn.MaxPool2d(kernel_size=5)
+        self.conv2 = nn.Conv2d(5, 2, 3, stride=1)
+        self.max_pool2 = nn.MaxPool2d(kernel_size=5)
+        self.linear1 = nn.Linear(722, 64)
+        self.lstm = nn.LSTM(64, 16)
+
+    def forward(self, x,hidden):
+        x = F.elu(self.conv1(x))
+        x = F.elu(self.max_pool1(x))
+        x = F.elu(self.conv2(x))
+        x = F.elu(self.max_pool2(x))
+        x = x.view(-1,722)
+        x = F.elu(self.linear1(x))
+        return self.lstm(x.reshape(-1,1,64), hidden)
+

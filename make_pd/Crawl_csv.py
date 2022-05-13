@@ -26,7 +26,21 @@ def future_symbol_1hour_data(symbol):
     try:
         data = pd.read_csv(url)
         data_time = data['0'].copy().to_numpy().astype('datetime64[ms]')
-        data.drop(['Unnamed: 0'], axis=1, inplace=True)
+        # data.drop(['Unnamed: 0'], axis=1, inplace=True)
+        data = data[['1', '2', '3', '4', '5']]
+
+        data = data.set_index(data_time)
+        return data
+    except FileNotFoundError:
+        return
+
+
+def future_symbol_4hour_data(symbol):
+    url = 'D:/CRYPTONALYTICS/TradeAlgorithm/csv/future/4hour/4hour_data_' + symbol + ".csv"
+    try:
+        data = pd.read_csv(url)
+        data_time = data['0'].copy().to_numpy().astype('datetime64[ms]')
+        # data.drop(['Unnamed: 0'], axis=1, inplace=True)
         data = data[['1', '2', '3', '4', '5']]
 
         data = data.set_index(data_time)
@@ -40,7 +54,7 @@ def future_symbol_15min_data(symbol):
     try:
         data = pd.read_csv(url)
         data_time = data['0'].copy().to_numpy().astype('datetime64[ms]')
-        data.drop(['Unnamed: 0'], axis=1, inplace=True)
+        # data.drop(['Unnamed: 0'], axis=1, inplace=True)
         data = data[['1', '2', '3', '4', '5']]
 
         data = data.set_index(data_time)
@@ -55,6 +69,7 @@ def future_symbol_1min_data(symbol):
         data = pd.read_csv(url)
         data_time = data['0'].copy().to_numpy().astype('datetime64[ms]')
         data.drop(['Unnamed: 0'], axis=1, inplace=True)
+
         data = data[['1', '2', '3', '4', '5']]
 
         data = data.set_index(data_time)
