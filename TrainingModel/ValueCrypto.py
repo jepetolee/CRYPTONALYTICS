@@ -22,13 +22,6 @@ class Trader(nn.Module):
             nn.ELU(),
             nn.Linear(8, 3))
 
-        self.leverage = nn.Sequential(
-            nn.Linear(128, 64),
-            nn.ELU(),
-            nn.Linear(64, 32),
-            nn.ELU(),
-            nn.Linear(32, 20))
-
         self.value = nn.Sequential(
             nn.Linear(128, 32),
             nn.ELU(),
