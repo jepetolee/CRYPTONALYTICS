@@ -22,13 +22,6 @@ class Trader(nn.Module):
             nn.ELU(),
             nn.Linear(8, 3))
 
-        self.leverage = nn.Sequential(
-            nn.Linear(128, 64),
-            nn.ELU(),
-            nn.Linear(64, 32),
-            nn.ELU(),
-            nn.Linear(32, 20))
-
         self.value = nn.Sequential(
             nn.Linear(128, 32),
             nn.ELU(),
@@ -38,7 +31,7 @@ class Trader(nn.Module):
             nn.ELU(),
             nn.Linear(2, 1))
 
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=0.06)
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=0.02)
 
     def transformed(self, hour, fifteen, one, hidden):
         hour, hidden1 = self.encoder1h(hour, (hidden[0][0].to(self.device), hidden[0][1].to(self.device)))

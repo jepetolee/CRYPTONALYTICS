@@ -54,7 +54,7 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
     client = Client(api_key="", api_secret="")
 
     if saved:
-        trader.load_state_dict(torch.load('./model/' + symbol + '_trader.pt'))
+        trader.load_state_dict(torch.load('./model/' + symbol + '_FINAL.pt'))
 
     trans = transforms.Compose([transforms.ToTensor(),
                                 transforms.Resize(size=(500, 500)),
@@ -86,9 +86,7 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
     h_in = [hidden, hidden, hidden]
     benefit = 100
     selecter = True
-    position = False
     t = 0
-    locker, ring, counter = 74, 0, 1
     while True:
         sleep(1)
         # <---------------------------------------------------------------------->
@@ -130,42 +128,26 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             difference *= -1
 
         # <---------------------------------------------------------------------->
-        if difference < impulse + locker * (counter - 1) and difference < 0:
+        if difference < impulse:
             selecter = True
-            difference = impulse + locker * (counter - 1)
-            reward = -1
-            counter = 1
-            ring = 0
+            difference = impulse
+            reward = -2
 
-        if difference > 200 + locker * ring:
-            ring += 1
-            position = True
-
-        if difference > locker * counter:
-            counter += 1
-
-        if position:
-            if difference <= 100 + locker * (ring - 1):
-                difference = 100 + locker * (ring - 1)
-                reward = ring
-                selecter = True
-                position = False
-                ring = 0
-                counter =1
+        if difference > 150:
+            reward = 1
+            difference = 150
+            selecter = True
 
         elif position_v is 'NONE':
             difference = 0
             sleep(900)
             reward = 0
-            counter = 1
-            ring =0
             selecter = True
 
         percent = leveragen * difference / selected_price * 100
         # <---------------------------------------------------------------------->
         if selecter:
             if position_v is not 'NONE':
-                sleep(900)
                 benefit *= (1 + percent / 100)
 
             onehour = client.futures_klines(symbol=symbol, interval='4h', limit=1500)
@@ -185,7 +167,7 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             trader.TrainModelP(s_oneHP, s_oneFP, s_oneMP,
                                sprime_oneH, sprime_oneF, sprime_oneM, h_inP, h_outP,
                                position_a, position_prob, reward)
-            torch.save(trader.state_dict(), './model/' + symbol + '_trader.pt')
+            torch.save(trader.state_dict(), './model/' + symbol + '_FINAL.pt')
             print(str(round(benefit, 2)) + "% " + position_v + " reward is " + str(round(percent, 2)),
                   current_price)
 
@@ -194,12 +176,12 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             s_oneH = sprime_oneH
             h_in = h_out
 
-        if t % 300 == 0:
+        if t % 600 == 0:
             print(current_price, percent)
         t += 1
 
 
-DayRealWorld('BTCUSDT', 'cpu', 20, impulse=-200, saved=True)  # 큰거 20 작은거 5
+DayRealWorld('BTCUSDT', 'cpu', 5, impulse=-150, saved=True)  # 큰거 20 작은거 5
 
 '''
 SOLUSDT

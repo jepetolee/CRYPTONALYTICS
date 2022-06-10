@@ -206,13 +206,13 @@ def PretrainingTrader(symbol, device, leveragen, saved=False, grad_lock=False):
 def PretrainingTrader2(symbol, device, leveragen, saved=False, grad_lock=False):
     trader = Trader(device).to(device)
     if saved:
-        trader.load_state_dict(torch.load('./model/' + symbol + '_trader.pt'))
+        trader.load_state_dict(torch.load('./model/' + symbol + '_FINAL.pt'))
     # <---------------------------------------------------------------------->
     #  DatasetFinal2(symbol)
     dataset = TradeData2SetOut(symbol)
 
     epoch = 10
-    total = 92477 - 600
+    total = 92477 - 600-34944
 
     # <---------------------------------------------------------------------->
     trans = transforms.Compose([transforms.ToTensor(),
@@ -226,25 +226,27 @@ def PretrainingTrader2(symbol, device, leveragen, saved=False, grad_lock=False):
         hidden_in = [hidden, hidden, hidden]
 
         # <---------------------------------------------------------------------->
-        s_FourHP = PIL.Image.open('D:/CRYPTONALYTICS/TradeAlgorithm/dataset/' + symbol + '/4hour/0.png').convert("L")
+        s_FourHP = PIL.Image.open('D:/CRYPTONALYTICS/TradeAlgorithm/dataset/' + symbol + '/4hour/2183.png').convert("L")
         s_FourH = trans(s_FourHP).float().to(device).reshape(-1, 1, 500, 500)
         s_FourHP.close()
 
-        s_OneHP = PIL.Image.open('D:/CRYPTONALYTICS/TradeAlgorithm/dataset/' + symbol + '/1hour/119.png').convert("L")
+        s_OneHP = PIL.Image.open('D:/CRYPTONALYTICS/TradeAlgorithm/dataset/' + symbol + '/1hour/8855.png').convert("L")
         s_OneH = trans(s_OneHP).float().to(device).reshape(-1, 1, 500, 500)
         s_OneHP.close()
 
         s_FiftMP = PIL.Image.open(
-            'D:/CRYPTONALYTICS/TradeAlgorithm/dataset/' + symbol + '/15min2/599.png').convert(
+            'D:/CRYPTONALYTICS/TradeAlgorithm/dataset/' + symbol + '/15min2/35543.png').convert(
             "L")
         s_FiftM = trans(s_FiftMP).float().to(device).reshape(-1, 1, 500, 500)
         s_FiftMP.close()
         # <---------------------------------------------------------------------->
-        temp1, temp2 = 0, 119
+        temp1, temp2 = 2184, 8856
         benefit = 100
         locker, ring = 5, 1
         position = False
         selecter = True
+        count = 0
+        win =0
         # <---------------------------------------------------------------------->
         for v in range(total):
 
@@ -253,11 +255,11 @@ def PretrainingTrader2(symbol, device, leveragen, saved=False, grad_lock=False):
             if v % 4 == 0:
                 temp2 += 1
 
-            t = v + 600
+            t = v + 600+34944
             data = dataset.copy()[t - 1]  # price
             # <---------------------------------------------------------------------->
             if selecter:
-                if t == 600:
+                if v == 0:
                     h_inP = hidden_in
                 else:
                     torch.cuda.empty_cache()
@@ -279,15 +281,15 @@ def PretrainingTrader2(symbol, device, leveragen, saved=False, grad_lock=False):
                 if position_a == 0:
                     selecter = False
                     position_v = 'LONG'
-
+                    count += 1
                 elif position_a == 1:
                     selecter = False
                     position_v = 'SHORT'
-
+                    count += 1
                 else:
                     position_v = 'NONE'
                     selecter = False
-
+            '''
             reward_close = leveragen * (0.9998 * data[119][1].item() - selected_price) / selected_price * 100
             reward_low = leveragen * (0.9998 * data[119][0].item() - selected_price) / selected_price * 100
             reward_high = leveragen * (0.9998 * data[119][2].item() - selected_price) / selected_price * 100
@@ -295,35 +297,41 @@ def PretrainingTrader2(symbol, device, leveragen, saved=False, grad_lock=False):
             if position_v == 'SHORT':
                 reward_close = leveragen * (0.9998 * selected_price - data[119][1].item()) / selected_price * 100
                 reward_low = leveragen * (0.9998 * selected_price - data[119][0].item()) / selected_price * 100
-                reward_high = leveragen * (0.9998 * selected_price - data[119][2].item()) / selected_price * 100
+                reward_high = leveragen * (0.9998 * selected_price - data[119][2].item()) / selected_price * 100'''
+
+            reward_close = 0.9998 * data[119][1].item() - selected_price
+            reward_low = 0.9998 * data[119][0].item() - selected_price
+            reward_high = 0.9998 * data[119][2].item() - selected_price
+
+            if position_v == 'SHORT':
+                reward_close = 0.9998 * selected_price - data[119][1].item()
+                reward_low = 0.9998 * selected_price - data[119][0].item()
+                reward_high = 0.9998 * selected_price - data[119][2].item()
 
             # <---------------------------------------------------------------------->
 
-            percent = 9e+199
+            percent = reward_close
+            '''
             if percent > reward_close:
                 percent = reward_close
             if percent > reward_low:
                 percent = reward_low
             if percent > reward_high:
                 percent = reward_high
-
+               '''
             # <---------------------------------------------------------------------->
 
-            if percent > locker * ring:
+            if percent > 150:
+
                 ring += 1
                 position = True
+                selecter = True
+                reward = 1
+                win+=1
+                percent = 5
+                print(position_v + " reward:" + str(round(100*win/count, 2)))
 
-            if position:
-                if percent <= locker * (ring - 2)+2.5:
-
-                    percent = locker * (ring - 2)+2.5
-                    reward = ring - 1
-
-                    selecter = True
-                    position = False
-                    ring = 1
-
-            if percent < -5:
+            if percent < -150:
                 percent = -5
                 reward = -1
                 selecter = True
@@ -332,14 +340,12 @@ def PretrainingTrader2(symbol, device, leveragen, saved=False, grad_lock=False):
                 percent = 0
                 selecter = True
                 reward = 0
-            if t % 10 == 0:
-                print(position_v + " reward:" + str(round(percent, 2)))
 
             if selecter:
                 if position_v is not 'NONE':
                     benefit *= 1 + percent / 100
-                if t % 10 == 0:
-                    print(str(t) + ": total_benenfit is " + str(
+
+                print(str(t) + ": total_benenfit is " + str(
                         round(benefit, 2)) + ",and " + position_v + " reward is " + str(
                         round(percent, 2)))
 
@@ -367,7 +373,7 @@ def PretrainingTrader2(symbol, device, leveragen, saved=False, grad_lock=False):
                 s_OneH = sprime_OneH
                 s_FourH = sprime_FourH
 
-                torch.save(trader.state_dict(), './model/' + symbol + '_trader.pt')
+                torch.save(trader.state_dict(), './model/' + symbol + '_FINAL.pt')
 
 
-PretrainingTrader2('BTCUSDT', 'cpu', 20, saved=True, grad_lock=False)
+PretrainingTrader2('BTCUSDT', 'cpu', 5, saved=True, grad_lock=False)

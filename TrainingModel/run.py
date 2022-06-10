@@ -2,7 +2,6 @@ import warnings
 import numpy as np
 import sys
 import PIL
-from binance import ThreadedWebsocketManager
 from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -61,14 +60,13 @@ def build_numpy(data, temper):
     return x
 
 
-def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=False):  # (XRP,BNB,BTC,ETH)
+def DayRealWorld(symbol, device, leveragen, saved=False, grad_lock=False):  # (XRP,BNB,BTC,ETH)
 
     trader = Trader(device).to(device)
-    client = sc.FutureAgent(api_key=""
-                            , api_secret="")
+    client = sc.FutureAgent(api_key="IQxQWmCRUSoxrrTrKeRosRlDPh0OLxuFHsd1QGOhiWmRmroYB7bCoNEQkoCQJAc6"
+                            , api_secret="1AgyXiFeTZqzk546fMCWMXgzNGUFRSqCZDoaJ6I1RBRdEYYc5zNYtpO4R7gpHNKa")
     client.check_account()
-    sleep(0.2)
-    free_pass = False
+
     client.change_leverage(leveragen)
     pixelart()
     if saved:
@@ -77,13 +75,6 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
     trans = transforms.Compose([transforms.ToTensor(),
                                 transforms.Resize(size=(500, 500)),
                                 transforms.Normalize(0.5, 0.5)])
-    # <---------------------------------------------------------------------->
-
-    current_time = datetime.now().strftime("%H:%M:%S")
-    print("일일 거래")
-    print(current_time + '에 시작')
-
-    # <---------------------------------------------------------------------->
 
     onehour = client.agent.futures_klines(symbol=symbol, interval='1h', limit=1500)
     onehour = pd.DataFrame(np.array(onehour, dtype=np.float)[-60:].T[1:6].T)
@@ -102,32 +93,23 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
     four_hour = build_numpy(four_hour, symbol)
     s_fourH = trans(four_hour).float().to(device).reshape(-1, 1, 500, 500)
 
-    # <---------------------------------------------------------------------->
-    hidden = (
-        torch.zeros([1, 1, 16], dtype=torch.float).to(device), torch.zeros([1, 1, 16], dtype=torch.float).to(device))
+    hidden = (torch.zeros([1, 1, 16], dtype=torch.float).to(device), torch.zeros([1, 1, 16], dtype=torch.float)
+              .to(device))
     h_in = [hidden, hidden, hidden]
+
+    account_info = client.agent.futures_account()
+    for asset in account_info["assets"]:
+        if asset["asset"] == "USDT":
+            av_balance = float(asset["initialMargin"])
+            account = float(asset["availableBalance"])
+            saved_account = account
+
     benefit = 100
     selecter = True
-    t = 0
-    best_difference = 100
-    ring = 0
-    # <---------------------------------------------------------------------->
     while True:
-        sleep(0.5)
-        # <---------------------------------------------------------------------->
-        current_price = float(client.agent.futures_symbol_ticker(symbol=symbol, limit=1500)['price'])
-        sleep(1)
-        account_info = client.agent.futures_account()
-        av_balance, account = None, None
-        for asset in account_info["assets"]:
-            if asset["asset"] == "USDT":
-                av_balance = float(asset["initialMargin"])
-                account = float(asset["availableBalance"])
 
-        # <---------------------------------------------------------------------->
         if selecter:
-
-
+            current_price = float(client.agent.futures_symbol_ticker(symbol=symbol, limit=1500)['price'])
             with torch.no_grad():
                 position_t, h_out = trader.SetPosition(s_fourH, s_oneH, s_oneF, h_in)
 
@@ -135,7 +117,6 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             position_a = Categorical(position_t).sample()
             position_prob = position_t[position_a.item()]
 
-            # <---------------------------------------------------------------------->
             s_oneHP = s_oneH
             s_FourHP = s_fourH
             s_oneFP = s_oneF
@@ -144,30 +125,32 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
             h_outP = h_out
             if position_a == 0:
                 position_v = 'LONG'
-                selected_price = current_price
                 selecter = False
-                calling_size = float(int(np.floor(1000 * account * leveragen / current_price)) / 1000)
-                stop_price = int((current_price + impulse) / 10) * 10
+                calling_size = float(int(np.floor(1000 * saved_account * leveragen / current_price)) / 1000)
                 try:
                     client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                                      stopPrice=stop_price
+                                                      stopPrice=current_price - 300
                                                       , side='SELL', quantity=calling_size, closePosition='true')
                     client.agent.futures_create_order(symbol=symbol, type='LIMIT', timeInForce='GTC',
                                                       price=current_price, side='BUY', quantity=calling_size)
+                    client.agent.futures_create_order(symbol=symbol, type='TAKE_PROFIT_MARKET', timeInForce='GTC',
+                                                      stopPrice=current_price + 300
+                                                      , side='BUY', quantity=calling_size, closePosition='true')
                 except:
                     pass
 
             elif position_a == 1:
                 position_v = 'SHORT'
-                selected_price = current_price
-                calling_size = float(int(np.floor(1000 * account * leveragen / current_price)) / 1000)
-                stop_price = int((current_price - impulse) / 10) * 10
+                calling_size = float(int(np.floor(1000 * saved_account * leveragen / current_price)) / 1000)
                 try:
                     client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                                      stopPrice=stop_price
+                                                      stopPrice=current_price + 300
                                                       , side='BUY', quantity=calling_size, closePosition='true')
                     client.agent.futures_create_order(symbol=symbol, type='LIMIT', timeInForce='GTC',
                                                       price=current_price, side='SELL', quantity=calling_size)
+                    client.agent.futures_create_order(symbol=symbol, type='TAKE_PROFIT_MARKET', timeInForce='GTC',
+                                                      stopPrice=current_price - 300
+                                                      , side='BUY', quantity=calling_size, closePosition='true')
                 except:
                     pass
 
@@ -180,96 +163,59 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
                     if av_balance > 1:
                         selecter = False
                         break
-                    sleep(1)
+                    else:
+                        sleep(1)
                 if selecter:
                     client.agent.futures_cancel_all_open_orders(symbol=symbol)
                     free_pass = True
+
             else:
                 position_v = 'NONE'
                 stop_price = current_price
                 selected_price = current_price
                 selecter = False
-                sleep(100)
+
             print(position_v + ': ', current_price)
 
-        # <---------------------------------------------------------------------->
-        difference = (0.9998 * current_price - selected_price)
-        if position_v == 'SHORT':
-            difference = (0.9998 * selected_price - current_price)
-        if position_v == 'NONE' and difference > 0:
-            difference *= -1
+        account_info = client.agent.futures_account()
+        av_balance, account = None, None
+        for asset in account_info["assets"]:
+            if asset["asset"] == "USDT":
+                av_balance = float(asset["initialMargin"])
+        sleep(1)
 
-        # <---------------------------------------------------------------------->
-        if difference > best_difference:
-            best_difference = difference + 65
-            client.agent.futures_cancel_all_open_orders(symbol=symbol)
-            if position_v == 'LONG':
-                stop_price_saved = stop_price
-                stop_price = int((current_price - 60) / 10) * 10
-                try:
-                    client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                                      stopPrice=stop_price
-                                                      , side='SELL', quantity=calling_size, closePosition='true')
-                except:
-                    client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                                      stopPrice=stop_price_saved
-                                                      , side='BUY', quantity=calling_size, closePosition='true')
-
-            if position_v == 'SHORT':
-                stop_price_saved = stop_price
-                stop_price = int((current_price + 60) / 10) * 10
-                try:
-                    client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                                      stopPrice=stop_price
-                                                      , side='BUY', quantity=calling_size, closePosition='true')
-                except:
-                    client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                                      stopPrice=stop_price_saved
-                                                      , side='BUY', quantity=calling_size, closePosition='true')
-
-            ring += int(difference / 100) + 1
-            reward = ring
-
-        percent = leveragen * difference / selected_price * 100
         if av_balance == 0:
             account_info = client.agent.futures_account()
             av_balance = None
             for asset in account_info["assets"]:
                 if asset["asset"] == "USDT":
                     av_balance = float(asset["initialMargin"])
+                    account = float(asset["availableBalance"])
             if av_balance == 0:
-                if ring == 0:
-                    reward = -1
                 selecter = True
-                ring = 0
-                difference = (0.9998 * stop_price - selected_price)
-                if position_v == 'SHORT':
-                    difference = (0.9998 * selected_price - stop_price)
-                if position_v == 'NONE' and difference > 0:
-                    difference *= -1
+                if position_v != 'NONE':
+                    if account >= saved_account:
+                        difference = 300
+                        reward = 1
+                    else:
+                        difference = -300
+                        reward = -1.5
+                    saved_account = account
+                else:
+                    reward = -0.125
+                    sleep(900)
+                    difference = 0
+                percent = leveragen * difference / selected_price * 100
 
-        if position_v is 'NONE':
-            reward = -0.25
-            ring = 0
-            sleep(300)
-            selecter = True
-        # <---------------------------------------------------------------------->
         if selecter:
             if free_pass:
                 free_pass = False
             else:
                 if position_v is not 'NONE':
                     benefit *= (1 + percent / 100)
-                    print(str(round(benefit, 2)) + "% " + position_v + " reward is " + str(round(percent, 2)),
-                          stop_price)
+                    print(str(round(benefit, 2)) + "% " + position_v + " reward is " + str(round(percent, 2)))
 
-                print("POSITION FINISHED")
-                client.check_account()
-                difference = 0
-                best_difference = 100
-
-                # <---------------------------------------------------------------------->
-                sleep(1)
+                sleep(0.1)
                 onehour = client.agent.futures_klines(symbol=symbol, interval='1h', limit=1500)
                 onehour = pd.DataFrame(np.array(onehour, dtype=np.float)[-60:].T[1:6].T)
                 onehour = build_numpy(onehour, symbol)
@@ -288,41 +234,15 @@ def DayRealWorld(symbol, device, leveragen, impulse=-1, saved=False, grad_lock=F
                 sprime_oneF = trans(fifteen_data).float().to(device).reshape(-1, 1, 500, 500)
 
                 trader.TrainModelP(s_FourHP, s_oneHP, s_oneFP,
-                                   sprime_fourH, sprime_oneH, sprime_oneF, h_inP, h_outP,
-                                   position_a, position_prob, reward)
-                torch.save(trader.state_dict(), './model/' + symbol + '_trader.pt')
-                # <---------------------------------------------------------------------->
+                                   sprime_fourH, sprime_oneH, sprime_oneF,
+                                   h_inP, h_outP, position_a, position_prob, reward)
 
-                selected_price = 0
+                torch.save(trader.state_dict(), './model/' + symbol + '_trader.pt')
+
                 s_fourH = sprime_fourH
                 s_oneF = sprime_oneF
                 s_oneH = sprime_oneH
                 h_in = h_out
 
-        # <---------------------------------------------------------------------->
-        if t % 200 == 0:
-            print(current_price, percent)
-        t += 1
-        # <---------------------------------------------------------------------->
 
-
-DayRealWorld('BTCUSDT', 'cpu', 3, impulse=-100, saved=True)
-
-# <---------------------------------------------------------------------->
-'''
-if difference > locker * counter:
-    if not position:
-        client.agent.futures_cancel_all_open_orders(symbol=symbol)
-        if position_v == 'LONG':
-            stop_price = stop_price+locker
-            client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                              stopPrice=stop_price
-                                              , side='SELL', quantity=calling_size, closePosition='true')
-        if position_v == 'SHORT':
-            stop_price = stop_price-locker
-            client.agent.futures_create_order(symbol=symbol, type='STOP_MARKET', timeInForce='GTC',
-                                              stopPrice=stop_price
-                                              , side='BUY', quantity=calling_size, closePosition='true')
-        counter += 1'''
-
-# <---------------------------------------------------------------------->
+DayRealWorld('BTCUSDT', 'cpu', 5, saved=True)
