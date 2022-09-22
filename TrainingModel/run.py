@@ -63,8 +63,8 @@ def build_numpy(data, temper):
 def DayRealWorld(symbol, device, leveragen, saved=False, grad_lock=False):  # (XRP,BNB,BTC,ETH)
 
     trader = Trader(device).to(device)
-    client = sc.FutureAgent(api_key="IQxQWmCRUSoxrrTrKeRosRlDPh0OLxuFHsd1QGOhiWmRmroYB7bCoNEQkoCQJAc6"
-                            , api_secret="1AgyXiFeTZqzk546fMCWMXgzNGUFRSqCZDoaJ6I1RBRdEYYc5zNYtpO4R7gpHNKa")
+    client = sc.FutureAgent(api_key=""
+                            , api_secret="")
     client.check_account()
 
     client.change_leverage(leveragen)
